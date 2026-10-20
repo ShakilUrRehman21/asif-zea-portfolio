@@ -13,6 +13,7 @@ interface TerminalPanelProps {
   isMinimized: boolean;
   onMinimize: () => void;
   isExecuting?: boolean;
+  onFocus?: () => void;
 }
 
 export const TerminalPanel: React.FC<TerminalPanelProps> = ({
@@ -22,7 +23,8 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
   onOpenCommandPalette,
   isMinimized,
   onMinimize,
-  isExecuting: isExternalExecuting = false
+  isExecuting: isExternalExecuting = false,
+  onFocus
 }) => {
   const [inputVal, setInputVal] = useState('');
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
@@ -41,8 +43,9 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
     }
   }, [logs]);
 
-  // Always keep input focused when terminal is clicked
+  // Always keep input focused when terminal is clicked & notify focus
   const handleContainerClick = () => {
+    onFocus?.();
     inputRef.current?.focus();
   };
 
@@ -303,6 +306,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
         ref={outputContainerRef}
         style={{
           flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
           padding: '16px',
           fontFamily: 'var(--font-mono)',
@@ -353,7 +357,10 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
             {/* Input line */}
             {log.command && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
-                <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>asif@az-secure:~$</span>
+                <span style={{ color: 'var(--accent-green)', fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                  <span className="hide-mobile">asif@az-secure:~$</span>
+                  <span className="show-mobile">asif:~$</span>
+                </span>
                 <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{log.command}</span>
               </div>
             )}
@@ -366,14 +373,44 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
                     const isSuccess = line.startsWith('[ OK ]');
                     const isWarning = line.includes('Notice:') || line.includes('WARNING');
                     const isHeader = line.includes('===') || line.includes('---');
+
+                    if (isSuccess) {
+                      return (
+                        <div 
+                          key={idx} 
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'flex-start', 
+                            gap: '8px', 
+                            color: 'var(--text-primary)', 
+                            marginTop: '2px', 
+                            lineHeight: 1.45 
+                          }}
+                        >
+                          <span 
+                            style={{ 
+                              color: 'var(--accent-green)', 
+                              fontWeight: 700, 
+                              whiteSpace: 'nowrap', 
+                              flexShrink: 0, 
+                              fontFamily: 'var(--font-mono)' 
+                            }}
+                          >
+                            [ OK ]
+                          </span>
+                          <span style={{ flex: 1, minWidth: 0, color: 'var(--accent-green)' }}>
+                            {line.replace('[ OK ] ', '')}
+                          </span>
+                        </div>
+                      );
+                    }
                     
                     let color = 'var(--text-primary)';
-                    if (isSuccess) color = 'var(--accent-green)';
-                    else if (isWarning) color = 'var(--accent-amber)';
+                    if (isWarning) color = 'var(--accent-amber)';
                     else if (isHeader) color = 'var(--text-muted)';
 
                     return (
-                      <div key={idx} style={{ color }}>
+                      <div key={idx} style={{ color, lineHeight: 1.45 }}>
                         {line}
                       </div>
                     );
@@ -439,7 +476,8 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
           gap: '8px',
           padding: '8px 10px',
           background: 'var(--bg-input)',
-          borderTop: '1px solid var(--border-green-dim)'
+          borderTop: '1px solid var(--border-green-dim)',
+          flexShrink: 0
         }}
       >
         <span style={{ color: 'var(--accent-green)', fontFamily: 'var(--font-mono)', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>

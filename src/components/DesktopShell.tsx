@@ -144,6 +144,15 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLockWorkstation })
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const [terminalZIndex, setTerminalZIndex] = useState(5);
+
+  const focusTerminal = useCallback(() => {
+    highestZIndexRef.current += 1;
+    setTerminalZIndex(highestZIndexRef.current);
+    setIsTerminalMinimized(false);
+    setActiveWindowId(null);
+  }, []);
+
   // Bring a window to top focus
   const focusWindow = useCallback((id: WindowId) => {
     highestZIndexRef.current += 1;
@@ -379,9 +388,13 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLockWorkstation })
       style={{
         position: 'relative',
         width: '100vw',
-        height: '100vh',
+        height: '100dvh',
+        minHeight: '100vh',
         overflow: 'hidden',
         backgroundColor: 'transparent',
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box',
         paddingTop: 'var(--topbar-height)',
         paddingBottom: 'calc(var(--dock-height) + 12px)'
       }}
@@ -395,24 +408,27 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLockWorkstation })
       {/* Main Workspace Area */}
       <main
         style={{
+          flex: 1,
           position: 'relative',
           width: '100%',
           height: '100%',
+          minHeight: 0,
           overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: isMobile ? '4px 4px 8px 4px' : '12px'
+          padding: isMobile ? '4px 6px' : '12px',
+          boxSizing: 'border-box'
         }}
       >
         {/* Primary Interactive Terminal Desktop Window */}
         <div
+          onClick={focusTerminal}
           style={{
             width: isMobile ? '100%' : 'min(980px, 94vw)',
-            height: isMobile 
-              ? 'calc(100vh - var(--topbar-height) - var(--dock-height) - 16px)' 
-              : 'min(640px, calc(100vh - var(--topbar-height) - var(--dock-height) - 40px))',
-            zIndex: 1,
+            height: '100%',
+            maxHeight: isMobile ? '100%' : 'min(640px, 100%)',
+            zIndex: terminalZIndex,
             display: isTerminalMinimized ? 'none' : 'flex'
           }}
         >
@@ -424,6 +440,7 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLockWorkstation })
             isMinimized={isTerminalMinimized}
             onMinimize={() => setIsTerminalMinimized(true)}
             isExecuting={isExecutingCommand}
+            onFocus={focusTerminal}
           />
         </div>
 
@@ -444,9 +461,18 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLockWorkstation })
         windows={windows}
         activeWindowId={activeWindowId}
         onToggleWindow={toggleWindowFromDock}
-        onFocusTerminal={() => setIsTerminalMinimized(false)}
+        onFocusTerminal={focusTerminal}
         isTerminalMinimized={isTerminalMinimized}
-        onToggleTerminal={() => setIsTerminalMinimized(!isTerminalMinimized)}
+        onToggleTerminal={() => {
+          if (isTerminalMinimized) {
+            focusTerminal();
+          } else if (terminalZIndex < highestZIndexRef.current) {
+            focusTerminal();
+          } else {
+            setIsTerminalMinimized(true);
+          }
+        }}
+        isTerminalActive={!isTerminalMinimized && (activeWindowId === null || terminalZIndex >= highestZIndexRef.current)}
       />
 
       {/* Command Palette Modal */}

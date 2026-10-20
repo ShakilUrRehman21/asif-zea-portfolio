@@ -101,17 +101,28 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
                 transition={{ duration: 0.15 }}
                 style={{
                   display: 'flex',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   gap: '8px',
+                  lineHeight: 1.45,
                   color: isOk ? 'var(--text-primary)' : 'var(--accent-amber)'
                 }}
               >
                 {isOk && (
-                  <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>
+                  <span 
+                    style={{ 
+                      color: 'var(--accent-green)', 
+                      fontWeight: 700, 
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      fontFamily: 'var(--font-mono)'
+                    }}
+                  >
                     [ OK ]
                   </span>
                 )}
-                <span>{isOk ? log.replace('[ OK ] ', '') : log}</span>
+                <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-word' }}>
+                  {isOk ? log.replace('[ OK ] ', '') : log}
+                </span>
               </motion.div>
             );
           })}

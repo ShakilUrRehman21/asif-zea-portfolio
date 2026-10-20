@@ -21,15 +21,17 @@ interface WindowDockProps {
   onFocusTerminal: () => void;
   isTerminalMinimized: boolean;
   onToggleTerminal: () => void;
+  isTerminalActive?: boolean;
 }
 
 export const WindowDock: React.FC<WindowDockProps> = ({
   windows,
   activeWindowId,
   onToggleWindow,
-  onFocusTerminal,
+  onFocusTerminal: _onFocusTerminal,
   isTerminalMinimized,
-  onToggleTerminal
+  onToggleTerminal,
+  isTerminalActive = false
 }) => {
   const dockApps: { id: WindowId; label: string; icon: React.ReactNode }[] = [
     { id: 'about', label: 'About', icon: <Shield size={16} /> },
@@ -74,11 +76,7 @@ export const WindowDock: React.FC<WindowDockProps> = ({
       <button
         onClick={() => {
           sound.playWindowAction();
-          if (isTerminalMinimized) {
-            onFocusTerminal();
-          } else {
-            onToggleTerminal();
-          }
+          onToggleTerminal();
         }}
         title="Terminal Console"
         aria-label="Toggle Terminal Console"
@@ -93,9 +91,21 @@ export const WindowDock: React.FC<WindowDockProps> = ({
           minWidth: '38px',
           flexShrink: 0,
           borderRadius: '8px',
-          background: !isTerminalMinimized ? 'var(--accent-green-dim)' : 'transparent',
-          border: !isTerminalMinimized ? '1px solid var(--border-active)' : '1px solid transparent',
-          color: !isTerminalMinimized ? 'var(--accent-green)' : 'var(--text-secondary)',
+          background: isTerminalActive 
+            ? 'var(--accent-green-dim)' 
+            : !isTerminalMinimized 
+            ? 'rgba(255, 255, 255, 0.05)' 
+            : 'transparent',
+          border: isTerminalActive 
+            ? '1px solid var(--accent-green)' 
+            : !isTerminalMinimized 
+            ? '1px solid var(--border-subtle)' 
+            : '1px solid transparent',
+          color: isTerminalActive 
+            ? 'var(--accent-green)' 
+            : !isTerminalMinimized 
+            ? 'var(--text-primary)' 
+            : 'var(--text-secondary)',
           cursor: 'pointer',
           transition: 'all 0.15s ease'
         }}
@@ -109,7 +119,12 @@ export const WindowDock: React.FC<WindowDockProps> = ({
             width: '4px',
             height: '4px',
             borderRadius: '50%',
-            background: !isTerminalMinimized ? 'var(--accent-green)' : 'var(--text-muted)'
+            background: isTerminalActive 
+              ? 'var(--accent-green)' 
+              : !isTerminalMinimized 
+              ? 'var(--accent-amber)' 
+              : 'transparent',
+            boxShadow: isTerminalActive ? '0 0 4px var(--accent-green)' : 'none'
           }}
         />
       </button>
