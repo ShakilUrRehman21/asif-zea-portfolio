@@ -117,6 +117,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        minHeight: 0,
         width: '100%',
         background: 'var(--bg-surface)',
         border: '1px solid var(--border-green-dim)',
@@ -477,7 +478,9 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
           padding: '8px 10px',
           background: 'var(--bg-input)',
           borderTop: '1px solid var(--border-green-dim)',
-          flexShrink: 0
+          flexShrink: 0,
+          position: 'relative',
+          zIndex: 10
         }}
       >
         <span style={{ color: 'var(--accent-green)', fontFamily: 'var(--font-mono)', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>

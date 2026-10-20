@@ -102,7 +102,7 @@ export const ApplicationWindow: React.FC<ApplicationWindowProps> = ({
         top: 'calc(var(--topbar-height) + 2px)',
         left: '0',
         right: '0',
-        bottom: 'calc(var(--dock-height) + 14px)',
+        bottom: 'max(4px, env(safe-area-inset-bottom, 4px))',
         width: '100vw',
         height: 'auto',
         borderRadius: '0px'

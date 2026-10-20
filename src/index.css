@@ -282,10 +282,10 @@ html, body {
   display: none;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   :root {
-    --topbar-height: 40px;
-    --dock-height: 52px;
+    --topbar-height: 38px;
+    --dock-height: 0px;
   }
 
   .hide-mobile {
@@ -294,6 +294,10 @@ html, body {
 
   .show-mobile {
     display: inline-flex !important;
+  }
+
+  .taskbar-dock {
+    display: none !important;
   }
 }
 

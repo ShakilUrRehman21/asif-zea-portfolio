@@ -396,7 +396,7 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLockWorkstation })
         flexDirection: 'column',
         boxSizing: 'border-box',
         paddingTop: 'var(--topbar-height)',
-        paddingBottom: 'calc(var(--dock-height) + 12px)'
+        paddingBottom: isMobile ? 'max(6px, env(safe-area-inset-bottom, 6px))' : 'calc(var(--dock-height) + 12px)'
       }}
     >
       {/* Top System Bar */}
@@ -411,7 +411,6 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLockWorkstation })
           flex: 1,
           position: 'relative',
           width: '100%',
-          height: '100%',
           minHeight: 0,
           overflow: 'hidden',
           display: 'flex',
@@ -427,6 +426,7 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLockWorkstation })
           style={{
             width: isMobile ? '100%' : 'min(980px, 94vw)',
             height: '100%',
+            minHeight: 0,
             maxHeight: isMobile ? '100%' : 'min(640px, 100%)',
             zIndex: terminalZIndex,
             display: isTerminalMinimized ? 'none' : 'flex'
@@ -456,24 +456,26 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLockWorkstation })
         />
       </main>
 
-      {/* Bottom Switcher Dock */}
-      <WindowDock
-        windows={windows}
-        activeWindowId={activeWindowId}
-        onToggleWindow={toggleWindowFromDock}
-        onFocusTerminal={focusTerminal}
-        isTerminalMinimized={isTerminalMinimized}
-        onToggleTerminal={() => {
-          if (isTerminalMinimized) {
-            focusTerminal();
-          } else if (terminalZIndex < highestZIndexRef.current) {
-            focusTerminal();
-          } else {
-            setIsTerminalMinimized(true);
-          }
-        }}
-        isTerminalActive={!isTerminalMinimized && (activeWindowId === null || terminalZIndex >= highestZIndexRef.current)}
-      />
+      {/* Bottom Switcher Dock (Desktop/Tablet only; hidden on mobile per user request) */}
+      {!isMobile && (
+        <WindowDock
+          windows={windows}
+          activeWindowId={activeWindowId}
+          onToggleWindow={toggleWindowFromDock}
+          onFocusTerminal={focusTerminal}
+          isTerminalMinimized={isTerminalMinimized}
+          onToggleTerminal={() => {
+            if (isTerminalMinimized) {
+              focusTerminal();
+            } else if (terminalZIndex < highestZIndexRef.current) {
+              focusTerminal();
+            } else {
+              setIsTerminalMinimized(true);
+            }
+          }}
+          isTerminalActive={!isTerminalMinimized && (activeWindowId === null || terminalZIndex >= highestZIndexRef.current)}
+        />
+      )}
 
       {/* Command Palette Modal */}
       <CommandPalette

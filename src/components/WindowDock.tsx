@@ -48,7 +48,7 @@ export const WindowDock: React.FC<WindowDockProps> = ({
 
   return (
     <div
-      className="no-scrollbar"
+      className="taskbar-dock no-scrollbar"
       style={{
         position: 'fixed',
         bottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
