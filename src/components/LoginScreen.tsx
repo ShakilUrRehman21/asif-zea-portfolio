@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { KeyRound, Lock, User, ArrowRight } from 'lucide-react';
+import { ArrowRight, Lock, ShieldCheck, Terminal, UserCheck } from 'lucide-react';
 import { PERSONAL_INFO } from '../data/portfolioData';
 import { sound } from '../utils/audio';
 
@@ -8,205 +8,202 @@ interface LoginScreenProps {
   onLoginSuccess: () => void;
 }
 
+const AUTH_LINES = [
+  { at: 1, text: '[ OK ] Cryptographic environment verified · PAM uid=1000', tone: 'ok' },
+  { at: 2, text: '[ OK ] Hardened Linux kernel 6.11.4 session unlocked', tone: 'ok' },
+  { at: 3, text: '[ OK ] Mounting /home/asif workstation workspace...', tone: 'ok' }
+];
+
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState('asif');
-  const [password, setPassword] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [authStepMessage, setAuthStepMessage] = useState<string | null>(null);
+  const [step, setStep] = useState(0);
+  const busyRef = useRef(false);
+  const timers = useRef<number[]>([]);
 
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (isAuthenticating) return;
+  useEffect(() => {
+    const timerIds = timers.current;
+    return () => {
+      timerIds.forEach((id) => window.clearTimeout(id));
+    };
+  }, []);
 
-    sound.playEnterBeep();
+  const authenticate = () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setIsAuthenticating(true);
-    setAuthStepMessage('Verifying credentials against local shadow database...');
+    sound.playEnterBeep();
 
-    setTimeout(() => {
+    const push = (delay: number, fn: () => void) => {
+      timers.current.push(window.setTimeout(fn, delay));
+    };
+
+    push(50, () => {
+      setStep(1);
       sound.playKeyClick();
-      setAuthStepMessage(`[ OK ] PAM: session opened for user ${username} (uid=1000)`);
-      setTimeout(() => {
-        sound.playChirp();
-        onLoginSuccess();
-      }, 500);
-    }, 450);
+    });
+    push(240, () => {
+      setStep(2);
+      sound.playKeyClick();
+    });
+    push(420, () => {
+      setStep(3);
+      sound.playKeyClick();
+    });
+    push(680, () => {
+      sound.playChirp();
+      onLoginSuccess();
+    });
   };
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.key === 'Enter' || event.key === ' ') && !busyRef.current) {
+        event.preventDefault();
+        authenticate();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(9, 11, 10, 0.72)',
-        color: 'var(--text-primary)',
-        fontFamily: 'var(--font-mono)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        zIndex: 100000
-      }}
-    >
+    <div className="login">
       <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        style={{
-          width: 'min(440px, 94vw)',
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-green-dim)',
-          borderRadius: '10px',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(163, 255, 111, 0.08)',
-          overflow: 'hidden'
-        }}
+        className="login__card"
+        initial={{ opacity: 0, y: 18, filter: 'blur(10px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Header */}
-        <div
-          style={{
-            padding: '16px 20px',
-            background: 'var(--bg-surface-elevated)',
-            borderBottom: '1px solid var(--border-subtle)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 700, fontSize: '13px', letterSpacing: '0.05em' }}>
-              AZ-SECURE WORKSTATION
+        <section className="login__brand">
+          <div className="login__mark">
+            <span className="login__mark-badge">AZ</span>
+            <span className="login__mark-text">
+              <b>AZ-SECURE</b>
+              <span>secure workstation · node 01</span>
             </span>
           </div>
-          <span className="badge-status" style={{ fontSize: '9px' }}>
-            READY
-          </span>
-        </div>
 
-        {/* Content */}
-        <form onSubmit={handleLogin} style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-              TARGET HOST: az-secure.internal (6.11.4-hardened)
-            </div>
-            <div style={{ fontSize: '13px', color: 'var(--accent-green)', fontWeight: 600 }}>
-              {PERSONAL_INFO.name} // Security Workstation
+            <h1 className="login__headline">
+              Welcome back,
+              <br />
+              <em>operator.</em>
+            </h1>
+            <p className="login__brand-lede">
+              An interactive offensive security workstation. Explore the profile, engagements,
+              labs, credentials and tooling — or drop into the terminal and run real commands.
+            </p>
+
+            <div className="login__brand-stats">
+              <div className="login__brand-stat">
+                <b>03+</b>
+                <span>Years in security</span>
+              </div>
+              <div className="login__brand-stat">
+                <b>10+</b>
+                <span>Enterprise clients</span>
+              </div>
+              <div className="login__brand-stat">
+                <b>05</b>
+                <span>Certifications</span>
+              </div>
             </div>
           </div>
 
-          {/* Username Field */}
+          <div className="login__brand-foot">
+            <span className="tag tag--acid">HTB CPTS</span>
+            <span className="tag tag--acid">CPENT</span>
+            <span className="tag tag--acid">AWS SAA</span>
+            <span className="tag">CAP</span>
+            <span className="tag">CNSP</span>
+          </div>
+        </section>
+
+        <div className="login__panel">
+          <div className="login__eyebrow">
+            <span className="eyebrow">
+              <span className="dot" /> Access Authorized
+            </span>
+            <span className="badge">
+              <ShieldCheck size={10} /> Clearance L4
+            </span>
+          </div>
+
           <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              <User size={13} /> Username
-            </label>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'var(--bg-input)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '4px',
-                padding: '8px 12px'
-              }}
-            >
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={isAuthenticating}
-                style={{
-                  width: '100%',
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  color: 'var(--accent-green)',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '13px'
-                }}
-              />
+            <h2 className="login__title">Launch Workstation</h2>
+            <p className="login__lede">
+              Pre-authenticated session ready for operator entry. No credentials required.
+            </p>
+          </div>
+
+          {/* Operator identification profile badge */}
+          <div className="login__operator-card">
+            <div className="login__operator-avatar">
+              <UserCheck size={18} />
+            </div>
+            <div className="login__operator-meta">
+              <div className="login__operator-title">
+                <span className="login__operator-name">{PERSONAL_INFO.name}</span>
+                <span className="login__operator-badge">uid 1000</span>
+              </div>
+              <div className="login__operator-sub">
+                <span>asif@az-secure</span>
+                <span className="sep">·</span>
+                <span>Active Session</span>
+              </div>
             </div>
           </div>
 
-          {/* Password Field */}
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              <KeyRound size={13} /> Authentication Key
-            </label>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: 'var(--bg-input)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '4px',
-                padding: '8px 12px'
-              }}
-            >
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Press Enter or type anything..."
-                autoFocus
-                disabled={isAuthenticating}
-                style={{
-                  width: '100%',
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  color: 'var(--text-primary)',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '13px'
-                }}
-              />
-            </div>
+          <div className="login__steps" aria-live="polite">
+            {step === 0 ? (
+              <div className="login__step">
+                <span className="live-dot" /> Session primed · Ready for operator entry
+              </div>
+            ) : (
+              AUTH_LINES.filter((line) => step >= line.at).map((line) => (
+                <div key={line.at} className="login__step login__step--ok">
+                  {line.text}
+                </div>
+              ))
+            )}
           </div>
 
-          {/* Demo Notice */}
-          <div
-            style={{
-              padding: '8px 12px',
-              background: 'rgba(229, 181, 103, 0.08)',
-              border: '1px solid var(--border-amber-dim)',
-              borderRadius: '4px',
-              fontSize: '11px',
-              color: 'var(--accent-amber)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <Lock size={12} />
-            <span>Click Authenticate or press Enter to unlock.</span>
-          </div>
-
-          {/* Feedback message */}
-          {authStepMessage && (
-            <div
-              style={{
-                fontSize: '11px',
-                color: authStepMessage.startsWith('[ OK ]') ? 'var(--accent-green)' : 'var(--text-secondary)',
-                fontFamily: 'var(--font-mono)'
-              }}
-            >
-              {authStepMessage}
-            </div>
-          )}
-
-          {/* Submit Button */}
           <button
-            type="submit"
+            type="button"
+            className="btn btn--primary btn--wide login__enter-btn"
             disabled={isAuthenticating}
-            className="btn-terminal btn-terminal-primary"
-            style={{ width: '100%', padding: '10px', fontSize: '13px', marginTop: '4px' }}
+            onClick={authenticate}
+            style={{ height: 48, fontSize: 13, fontWeight: 600 }}
+            aria-label="Enter workstation"
           >
             {isAuthenticating ? (
-              <span>Authenticating...</span>
+              <>
+                <Terminal size={14} className="spin-slow" />
+                <span>Initializing workstation…</span>
+              </>
             ) : (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                Authenticate & Enter Workstation <ArrowRight size={14} />
-              </span>
+              <>
+                <span>Enter Workstation</span>
+                <ArrowRight size={15} className="arrow" />
+              </>
             )}
           </button>
-        </form>
+
+          <div className="login__hint">
+            <Lock size={10} /> Password not required · Press <span className="kbd">Enter ↵</span> to launch
+          </div>
+
+          <div className="login__links">
+            <a href={`mailto:${PERSONAL_INFO.email}`}>{PERSONAL_INFO.email}</a>
+            <a href={PERSONAL_INFO.linkedin} target="_blank" rel="noopener noreferrer">
+              LinkedIn
+            </a>
+            <button type="button" onClick={authenticate} disabled={isAuthenticating}>
+              Direct bypass
+            </button>
+          </div>
+        </div>
       </motion.div>
     </div>
   );

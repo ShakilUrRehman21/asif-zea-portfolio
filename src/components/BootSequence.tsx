@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { ChevronRight, ShieldCheck } from 'lucide-react';
 import { sound } from '../utils/audio';
 
 interface BootSequenceProps {
@@ -7,153 +8,172 @@ interface BootSequenceProps {
 }
 
 const BOOT_LOGS = [
-  'AZ Linux Kernel 6.11.4-az-hardened x86_64 — initializing architecture...',
-  '[ OK ] Initialized CPU hardware timers & ACPI subsystem',
-  '[ OK ] Starting cryptographically verified system services',
-  '[ OK ] Initializing network interface (eth0: 10.13.37.10/24)',
-  '[ OK ] Loading security toolkit: burp, bloodhound, impacket, frida, nmap',
-  '[ OK ] Mounting user encrypted workspace /home/asif (LUKS ext4)',
-  '[ OK ] Security policies active (AppArmor, iptables, auditd)',
-  '[ OK ] System verified. Workstation ready for operator login.'
+  'UEFI secure boot chain verified · signature OK',
+  'Linux kernel 6.11.4-az-hardened x86_64 initializing',
+  'Cryptographic services and LUKS volume mounted',
+  'Network interface tun0 online · 10.10.14.88/24',
+  'Security toolchain loaded · burp, bloodhound, impacket, frida',
+  'AppArmor, auditd and iptables policies enforced',
+  'Workspace /home/asif ready for operator session'
 ];
 
 export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
-  const [currentLineIndex, setCurrentLineIndex] = useState(0);
+  const [lineIndex, setLineIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
+    const skip = (event: KeyboardEvent | MouseEvent) => {
+      if (event instanceof MouseEvent) {
+        sound.playWindowAction();
+        onComplete();
+      } else if (['Escape', ' ', 'Enter'].includes(event.key)) {
         sound.playEnterBeep();
         onComplete();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    window.addEventListener('keydown', skip);
+    window.addEventListener('pointerdown', skip);
+    return () => {
+      window.removeEventListener('keydown', skip);
+      window.removeEventListener('pointerdown', skip);
+    };
   }, [onComplete]);
 
   useEffect(() => {
-    if (currentLineIndex < BOOT_LOGS.length) {
-      const timer = setTimeout(() => {
-        sound.playKeyClick();
-        setCurrentLineIndex(prev => prev + 1);
-        setProgress(Math.round(((currentLineIndex + 1) / BOOT_LOGS.length) * 100));
-      }, 260);
-      return () => clearTimeout(timer);
-    } else {
-      // Small pause after last message, then complete
-      const finishTimer = setTimeout(() => {
+    if (lineIndex >= BOOT_LOGS.length) {
+      const finish = setTimeout(() => {
         sound.playChirp();
         onComplete();
-      }, 600);
-      return () => clearTimeout(finishTimer);
+      }, 380);
+      return () => clearTimeout(finish);
     }
-  }, [currentLineIndex, onComplete]);
+
+    const timer = setTimeout(() => {
+      setLineIndex((current) => current + 1);
+      setProgress(Math.round(((lineIndex + 1) / BOOT_LOGS.length) * 100));
+      sound.playKeyClick();
+    }, lineIndex === 0 ? 300 : 150);
+
+    return () => clearTimeout(timer);
+  }, [lineIndex, onComplete]);
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(9, 11, 10, 0.72)',
-        color: 'var(--text-primary)',
-        fontFamily: 'var(--font-mono)',
-        padding: 'min(40px, 5vw)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        zIndex: 100000,
-        overflow: 'hidden'
-      }}
-    >
-      <div>
-        {/* OS Identity */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '12px' }}>
-          <div>
-            <span style={{ color: 'var(--accent-green)', fontWeight: 700, fontSize: 'clamp(12px, 3.8vw, 14px)', letterSpacing: '0.05em' }}>
-              AZ-SECURE // PERSONAL WORKSTATION (x86_64)
-            </span>
-            <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px' }}>
-              BIOS v2.4.1 · UEFI SECURE BOOT ENABLED
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              sound.playEnterBeep();
-              onComplete();
-            }}
-            className="btn-terminal"
-            style={{ fontSize: '11px', padding: '4px 10px', flexShrink: 0 }}
+    <div className="boot" role="status" aria-live="polite">
+      <div className="boot__top">
+        <div className="boot__brand">
+          <span className="boot__brand-name">AZ-SECURE</span>
+          <span className="boot__brand-sub">Personal workstation · x86_64 · secure boot</span>
+        </div>
+        <div className="boot__meta">
+          <span className="boot__meta-row">BIOS v2.4.1 // UEFI</span>
+          <span className="boot__meta-row">Kernel 6.11.4-az-hardened</span>
+        </div>
+      </div>
+
+      <div className="boot__main">
+        <div className="boot__mark">
+          <motion.svg
+            viewBox="0 0 120 140"
+            fill="none"
+            initial={{ opacity: 0.4 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            aria-hidden="true"
           >
-            Skip Boot [ESC]
-          </button>
+            <motion.path
+              d="M60 6 L107 24 V66 C107 97 87 118 60 133 C33 118 13 97 13 66 V24 Z"
+              stroke="var(--acid)"
+              strokeWidth="1.6"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 1.15, ease: 'easeInOut' }}
+            />
+            <motion.path
+              d="M37 94 L60 42 L83 94 M45.5 77 H74.5"
+              stroke="var(--acid)"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ duration: 0.85, delay: 0.25, ease: 'easeInOut' }}
+            />
+            <motion.circle
+              cx="60"
+              cy="6"
+              r="2.5"
+              fill="var(--acid)"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 0.4] }}
+              transition={{ duration: 1.6, delay: 0.9, repeat: Infinity }}
+            />
+          </motion.svg>
+
+          <span className="boot__mark-label">Initializing operator environment</span>
+          <h1 className="boot__mark-title">
+            Instrument <em>grade</em> security.
+          </h1>
+          <span className="boot__mark-sub">Asif Zea · Application Security Engineer</span>
         </div>
 
-        {/* Staggered Boot Logs */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: 'clamp(11px, 3vw, 13px)' }}>
-          {BOOT_LOGS.slice(0, currentLineIndex).map((log, index) => {
-            const isOk = log.startsWith('[ OK ]');
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.15 }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  lineHeight: 1.45,
-                  color: isOk ? 'var(--text-primary)' : 'var(--accent-amber)'
-                }}
-              >
-                {isOk && (
-                  <span 
-                    style={{ 
-                      color: 'var(--accent-green)', 
-                      fontWeight: 700, 
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                      fontFamily: 'var(--font-mono)'
-                    }}
-                  >
-                    [ OK ]
-                  </span>
-                )}
-                <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-word' }}>
-                  {isOk ? log.replace('[ OK ] ', '') : log}
-                </span>
-              </motion.div>
-            );
-          })}
+        <div className="boot__logs">
+          {BOOT_LOGS.slice(0, lineIndex).map((log) => (
+            <motion.div
+              key={log}
+              className="boot__log"
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <span className="boot__ok">[ OK ]</span>
+              <span>{log}</span>
+            </motion.div>
+          ))}
 
-          {currentLineIndex < BOOT_LOGS.length && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
-              <span>Loading module...</span>
-              <span className="terminal-cursor" />
+          {lineIndex < BOOT_LOGS.length ? (
+            <div className="boot__log boot__log--warn">
+              <span className="boot__ok" style={{ color: 'var(--amber)' }}>[ .. ]</span>
+              <span>{BOOT_LOGS[lineIndex]}</span>
+              <span className="console__cursor" style={{ marginTop: 3 }} />
             </div>
+          ) : (
+            <motion.div
+              className="boot__log"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.25 }}
+            >
+              <span className="boot__ok">[ OK ]</span>
+              <span style={{ color: 'var(--acid)' }}>
+                Workstation ready. Opening secure session...
+              </span>
+            </motion.div>
           )}
         </div>
       </div>
 
-      {/* Progress Footer */}
-      <div style={{ marginTop: '30px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>
-          <span>INITIALIZING SYSTEM BUS...</span>
-          <span style={{ color: 'var(--accent-green)' }}>{progress}%</span>
+      <div className="boot__bottom">
+        <div className="boot__progress-label">
+          <span>Initializing system bus · press any key to skip</span>
+          <span className="boot__pct">{progress}%</span>
         </div>
-        <div style={{ width: '100%', height: '3px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
-          <div
-            style={{
-              width: `${progress}%`,
-              height: '100%',
-              background: 'var(--accent-green)',
-              boxShadow: '0 0 8px var(--accent-green)',
-              transition: 'width 0.2s ease-out'
-            }}
-          />
+        <div className="boot__progress">
+          <div className="boot__progress-fill" style={{ width: `${progress}%` }} />
         </div>
       </div>
+
+      <button
+        type="button"
+        className="boot__skip"
+        onClick={(event) => {
+          event.stopPropagation();
+          sound.playWindowAction();
+          onComplete();
+        }}
+      >
+        <ShieldCheck size={11} /> Skip boot <ChevronRight size={11} />
+      </button>
     </div>
   );
 };

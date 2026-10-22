@@ -1,12 +1,14 @@
-import React, { useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useDragControls } from 'motion/react';
-import { Minus, Square, Copy, X, Terminal, Shield, Award, BookOpen, GraduationCap, Mail, Briefcase, Cpu, Lock } from 'lucide-react';
+import { Copy, Minus, Square, X } from 'lucide-react';
+import { APP_MAP } from '../data/apps';
 import type { WindowState } from '../types/portfolio';
 import { sound } from '../utils/audio';
 
 interface ApplicationWindowProps {
   windowState: WindowState;
   isActive: boolean;
+  isMobile: boolean;
   onFocus: () => void;
   onClose: () => void;
   onMinimize: () => void;
@@ -17,244 +19,162 @@ interface ApplicationWindowProps {
 export const ApplicationWindow: React.FC<ApplicationWindowProps> = ({
   windowState,
   isActive,
+  isMobile,
   onFocus,
   onClose,
   onMinimize,
   onMaximize,
   children
 }) => {
+  const app = APP_MAP[windowState.id];
+  const AppIcon = app.icon;
   const dragControls = useDragControls();
-  const windowRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLSpanElement>(null);
+  const [viewport, setViewport] = useState(() => ({
+    w: typeof window === 'undefined' ? 1440 : window.innerWidth,
+    h: typeof window === 'undefined' ? 900 : window.innerHeight
+  }));
 
-  // Icon selector based on window id
-  const renderAppIcon = () => {
-    switch (windowState.id) {
-      case 'about': return <Shield size={14} style={{ color: 'var(--accent-green)' }} />;
-      case 'experience': return <Briefcase size={14} style={{ color: 'var(--accent-amber)' }} />;
-      case 'skills': return <Cpu size={14} style={{ color: 'var(--accent-green)' }} />;
-      case 'certs': return <Award size={14} style={{ color: 'var(--accent-green)' }} />;
-      case 'achievements': return <Award size={14} style={{ color: 'var(--accent-amber)' }} />;
-      case 'labs': return <Terminal size={14} style={{ color: 'var(--accent-green)' }} />;
-      case 'projects': return <Lock size={14} style={{ color: 'var(--accent-amber)' }} />;
-      case 'methodology': return <BookOpen size={14} style={{ color: 'var(--accent-green)' }} />;
-      case 'education': return <GraduationCap size={14} style={{ color: 'var(--accent-blue)' }} />;
-      case 'contact': return <Mail size={14} style={{ color: 'var(--accent-green)' }} />;
-      default: return <Terminal size={14} style={{ color: 'var(--accent-green)' }} />;
-    }
+  useEffect(() => {
+    const onResize = () => setViewport({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    const node = scrollRef.current;
+    const bar = progressRef.current;
+    if (!node || !bar) return;
+    const max = node.scrollHeight - node.clientHeight;
+    const ratio = max > 8 ? Math.min(1, Math.max(0, node.scrollTop / max)) : 0;
+    bar.style.transform = `scaleX(${ratio})`;
+  }, []);
+
+  const width = Math.min(app.width, viewport.w - 32);
+  const left = Math.max(14, Math.min(windowState.position.x, viewport.w - width - 14));
+  const top = Math.max(10, Math.min(windowState.position.y, 46));
+
+  const constrainedStyle: React.CSSProperties = isMobile
+    ? { zIndex: windowState.zIndex }
+    : windowState.isMaximized
+      ? {
+          top: 10,
+          left: 10,
+          right: 10,
+          bottom: 'calc(var(--dock-h) + 12px)',
+          width: 'auto',
+          height: 'auto',
+          maxHeight: 'none',
+          zIndex: windowState.zIndex
+        }
+      : { top, left, width, zIndex: windowState.zIndex };
+
+  const dragConstraints = {
+    left: -(left - 12),
+    right: Math.max(20, viewport.w - width - left - 14),
+    top: -(top - 10),
+    bottom: Math.max(80, viewport.h - top - 180)
   };
-
-  const [isMobile, setIsMobile] = React.useState(() => 
-    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
-  );
-
-  // Dynamic drag constraints allowing free movement all the way to the right and bottom corners
-  const [dragBounds, setDragBounds] = React.useState({
-    top: -20,
-    left: -20,
-    right: 1200,
-    bottom: 600
-  });
-
-  React.useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth <= 768;
-      setIsMobile(mobile);
-
-      if (!mobile) {
-        const winWidth = window.innerWidth;
-        const winHeight = window.innerHeight;
-        const initX = windowState.position?.x ?? 30;
-        const initY = Math.max(12, Math.min(windowState.position?.y ?? 20, 40));
-
-        setDragBounds({
-          left: -(initX - 8),
-          right: Math.max(400, winWidth - initX - 120),
-          top: -(initY - 4),
-          bottom: Math.max(200, winHeight - initY - 100)
-        });
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [windowState.position?.x, windowState.position?.y]);
-
-  if (windowState.isMinimized) {
-    return null;
-  }
-
-  // Maximized styling vs floating window styling
-  const styleVariants = windowState.isMaximized
-    ? {
-        position: 'fixed' as const,
-        top: 'calc(var(--topbar-height) + 4px)',
-        left: '4px',
-        right: '4px',
-        bottom: 'calc(var(--dock-height) + 6px)',
-        width: 'auto',
-        height: 'auto',
-        borderRadius: '8px'
-      }
-    : isMobile
-    ? {
-        position: 'fixed' as const,
-        top: 'calc(var(--topbar-height) + 2px)',
-        left: '0',
-        right: '0',
-        bottom: 'max(4px, env(safe-area-inset-bottom, 4px))',
-        width: '100vw',
-        height: 'auto',
-        borderRadius: '0px'
-      }
-    : {
-        position: 'absolute' as const,
-        top: `${Math.max(12, Math.min(windowState.position.y, 40))}px`,
-        left: `${windowState.position.x}px`,
-        width: 'min(860px, 92vw)',
-        maxHeight: `calc(100vh - var(--topbar-height) - var(--dock-height) - 48px - ${Math.max(12, Math.min(windowState.position.y, 40))}px)`,
-        borderRadius: '8px'
-      };
 
   return (
     <motion.div
-      ref={windowRef}
-      onMouseDown={onFocus}
-      initial={{ opacity: 0, scale: 0.94, y: 15 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.92, y: 10 }}
-      transition={{ type: 'spring', stiffness: 360, damping: 28 }}
-      drag={!windowState.isMaximized && !isMobile}
+      className="window"
+      data-active={isActive}
+      data-max={windowState.isMaximized}
+      data-window={windowState.id}
+      role="dialog"
+      aria-label={`${app.label} window`}
+      aria-modal={false}
+      initial={{ opacity: 0, scale: 0.965, y: 16, filter: 'blur(8px)' }}
+      animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, scale: 0.975, y: 10, filter: 'blur(6px)' }}
+      transition={{ type: 'spring', stiffness: 330, damping: 30, mass: 0.75 }}
+      drag={!isMobile && !windowState.isMaximized}
       dragControls={dragControls}
       dragListener={false}
-      dragElastic={0.08}
+      dragElastic={0.055}
       dragMomentum={false}
-      dragConstraints={dragBounds}
-      style={{
-        ...styleVariants,
-        zIndex: windowState.zIndex,
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'var(--bg-surface)',
-        border: isActive ? '1px solid var(--accent-green)' : '1px solid var(--border-subtle)',
-        boxShadow: isActive ? 'var(--shadow-active-window)' : 'var(--shadow-window)',
-        overflow: 'hidden',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)'
-      }}
+      dragConstraints={dragConstraints}
+      onPointerDown={onFocus}
+      style={constrainedStyle}
     >
-      {/* Title Bar (Draggable handle on desktop) */}
-      <div
-        onPointerDown={(e) => {
-          if (!windowState.isMaximized && !isMobile) {
-            dragControls.start(e);
+      <header
+        className="window__bar"
+        onPointerDown={(event) => {
+          const target = event.target as HTMLElement;
+          if (target.closest('button')) return;
+          if (!isMobile && !windowState.isMaximized) {
+            dragControls.start(event);
           }
         }}
-        style={{
-          height: '38px',
-          padding: '0 12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: isActive ? 'var(--bg-surface-elevated)' : 'rgba(16, 20, 17, 0.95)',
-          borderBottom: isActive ? '1px solid var(--border-green-dim)' : '1px solid var(--border-subtle)',
-          cursor: !windowState.isMaximized && !isMobile ? 'grab' : 'default',
-          userSelect: 'none'
-        }}
       >
-        {/* Left: Application Identity */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-          {renderAppIcon()}
-          <span 
-            style={{ 
-              fontFamily: 'var(--font-mono)', 
-              fontSize: '12px', 
-              fontWeight: 600, 
-              color: isActive ? 'var(--accent-green)' : 'var(--text-primary)',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {windowState.title}
+        <span className="window__mobile-grab" aria-hidden="true" />
+        <div className="window__identity">
+          <span className="window__icon" data-tone={app.tone}>
+            <AppIcon size={13} />
           </span>
-          <span 
-            className="hide-mobile"
-            style={{ 
-              fontSize: '11px', 
-              color: 'var(--text-muted)', 
-              fontFamily: 'var(--font-mono)',
-              display: 'inline-block',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}
-          >
-            // {windowState.subtitle}
-          </span>
+          <div className="window__titles">
+            <span className="window__title">{app.label.toUpperCase()}.APP</span>
+            <span className="window__sub">{windowState.subtitle}</span>
+          </div>
         </div>
 
-        {/* Right: Window Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          {/* Minimize button */}
+        <div className="window__actions">
           <button
-            className="win-ctrl-btn"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
+            type="button"
+            className="window__btn"
+            data-role="minimize"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
               sound.playWindowAction();
               onMinimize();
             }}
             title="Minimize"
-            aria-label="Minimize Window"
+            aria-label="Minimize window"
           >
-            <Minus size={13} />
+            <Minus size={14} />
           </button>
 
-          {/* Maximize / Restore button */}
-          {!isMobile && (
-            <button
-              className="win-ctrl-btn"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                sound.playWindowAction();
-                onMaximize();
-              }}
-              title={windowState.isMaximized ? 'Restore' : 'Maximize'}
-              aria-label={windowState.isMaximized ? 'Restore Window' : 'Maximize Window'}
-            >
-              {windowState.isMaximized ? <Copy size={11} /> : <Square size={11} />}
-            </button>
-          )}
-
-          {/* Close button */}
           <button
-            className="win-ctrl-btn close"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
+            type="button"
+            className="window__btn"
+            data-role="maximize"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
+              sound.playWindowAction();
+              onMaximize();
+            }}
+            title={windowState.isMaximized ? 'Restore window' : 'Maximize window'}
+            aria-label={windowState.isMaximized ? 'Restore window' : 'Maximize window'}
+          >
+            {windowState.isMaximized ? <Copy size={12} /> : <Square size={12} />}
+          </button>
+
+          <button
+            type="button"
+            className="window__btn"
+            data-role="close"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation();
               sound.playWindowAction();
               onClose();
             }}
             title="Close"
-            aria-label="Close Window"
+            aria-label="Close window"
           >
-            <X size={14} />
+            <X size={15} />
           </button>
         </div>
-      </div>
 
-      {/* Window Body (Scrollable with generous bottom padding so content never gets obscured) */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          WebkitOverflowScrolling: 'touch',
-          padding: isMobile ? '12px 10px 72px 10px' : '16px 16px 64px 16px',
-          background: 'radial-gradient(ellipse at top, rgba(21, 26, 22, 0.4) 0%, rgba(16, 20, 17, 0.8) 100%)'
-        }}
-      >
-        {children}
+        <span className="window__progress" ref={progressRef} aria-hidden="true" />
+      </header>
+
+      <div className="window__scroll" ref={scrollRef} onScroll={handleScroll}>
+        <div className="window__body">{children}</div>
       </div>
     </motion.div>
   );

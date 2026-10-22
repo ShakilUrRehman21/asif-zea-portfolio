@@ -1,96 +1,101 @@
 import React from 'react';
+import { ChevronRight, ShieldCheck, Terminal } from 'lucide-react';
 import { LABS_DATA } from '../../data/portfolioData';
-import { Terminal } from 'lucide-react';
+import { Reveal, SectionHead, Tag } from '../ui';
 
-export const LabsApp: React.FC = () => {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '6px' }}>
-      {/* Intro */}
-      <div 
-        style={{
-          background: 'var(--bg-surface-elevated)',
-          border: '1px solid var(--border-active)',
-          borderRadius: '8px',
-          padding: '20px'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <Terminal size={20} style={{ color: 'var(--accent-green)' }} />
-          <h2 style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
-            HANDS-ON SECURITY LABS & CONTINUOUS RESEARCH
-          </h2>
+const LAB_TOOLING = [
+  ['BloodHound', 'NetExec', 'Impacket', 'Chisel', 'Proxychains'],
+  ['Burp Suite', 'Postman', 'JADX', 'Frida', 'Objection']
+];
+
+export const LabsApp: React.FC = () => (
+  <div className="app">
+    <SectionHead
+      index="06"
+      eyebrow="Labs"
+      title="Where the reps"
+      accent="happen."
+      description="Continuous, isolated environments for the techniques that don't fit in a report template — enterprise attack paths, modern web flaws and AI-agent abuse."
+      meta={
+        <div className="tag-row">
+          <Tag tone="acid">Hack The Box</Tag>
+          <Tag tone="acid">PortSwigger Academy</Tag>
+          <Tag>Multi-host AD homelab</Tag>
+          <Tag>Authorized environments only</Tag>
         </div>
-        <p className="font-sans" style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-          Dedicated continuous learning environments, multi-host Active Directory laboratory simulations, and specialized web security research. All activities conducted within authorized educational frameworks.
-        </p>
-      </div>
+      }
+    />
 
-      {/* Lab Cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-        {LABS_DATA.map((lab, idx) => (
-          <div
-            key={idx}
-            style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '8px',
-              padding: '22px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
-              <div>
-                <span className="badge-status" style={{ fontSize: '10px', marginBottom: '8px' }}>
-                  {lab.focus}
+    <div className="lab-list">
+      {LABS_DATA.map((lab, index) => (
+        <Reveal key={lab.platform} delay={index * 0.06}>
+          <article className="panel panel--interactive is-acid lab">
+            <div className="lab__head">
+              <div className="lab__identity">
+                <span className="lab__index">0{index + 1}</span>
+                <div>
+                  <h3 className="lab__platform">{lab.platform}</h3>
+                  <div className="lab__focus">{lab.focus}</div>
+                </div>
+              </div>
+              <div className="lab__highlights">
+                {lab.keyHighlights.map((highlight) => (
+                  <Tag key={highlight} tone="amber">
+                    {highlight}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+
+            <p className="lab__desc">{lab.description}</p>
+
+            <div className="lab__topics">
+              {lab.topics.map((topic) => (
+                <div className="lab__topic" key={topic}>
+                  <ChevronRight size={11} />
+                  <span>{topic}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="lab__toolstrip">
+              <span className="lab__toolstrip-label">Tooling</span>
+              {LAB_TOOLING[index].map((tool) => (
+                <span className="tag" key={`${lab.platform}-${tool}`}>
+                  {tool}
                 </span>
-                <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-                  {lab.platform}
-                </h3>
-              </div>
-
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {lab.keyHighlights.map((hl, hIdx) => (
-                  <span
-                    key={hIdx}
-                    style={{
-                      fontSize: '11px',
-                      fontFamily: 'var(--font-mono)',
-                      background: 'rgba(229, 181, 103, 0.1)',
-                      color: 'var(--accent-amber)',
-                      border: '1px solid var(--border-amber-dim)',
-                      padding: '2px 8px',
-                      borderRadius: '4px'
-                    }}
-                  >
-                    {hl}
-                  </span>
-                ))}
-              </div>
+              ))}
             </div>
-
-            <p className="font-sans" style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              {lab.description}
-            </p>
-
-            {/* Topics covered */}
-            <div style={{ background: 'var(--bg-input)', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '14px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--accent-green)', fontFamily: 'var(--font-mono)', marginBottom: '8px', textTransform: 'uppercase' }}>
-                Curriculum & Research Vectors:
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '8px' }}>
-                {lab.topics.map((topic, tIdx) => (
-                  <div key={tIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: 'var(--text-primary)' }}>
-                    <span style={{ color: 'var(--accent-green)', fontFamily: 'var(--font-mono)' }}>›</span>
-                    <span className="font-sans">{topic}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+          </article>
+        </Reveal>
+      ))}
     </div>
-  );
-};
+
+    <Reveal>
+      <div className="app-note">
+        <ShieldCheck size={12} />
+        <span>
+          All lab activity is conducted within authorized educational frameworks and isolated
+          environments. Nothing here touches production infrastructure.
+        </span>
+      </div>
+    </Reveal>
+
+    <Reveal>
+      <div className="panel app-callout">
+        <div>
+          <div className="app-callout__title">
+            Research follows the <em>release cycle.</em>
+          </div>
+          <p className="app-callout__text">
+            New web, API and LLM techniques are reproduced in the lab first, then folded into client
+            test plans.
+          </p>
+        </div>
+        <span className="tag" style={{ height: 34, padding: '0 12px' }}>
+          <Terminal size={11} /> Methodology →
+        </span>
+      </div>
+    </Reveal>
+  </div>
+);

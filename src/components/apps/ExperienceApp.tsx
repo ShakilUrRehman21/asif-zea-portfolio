@@ -1,164 +1,178 @@
-import React, { useState } from 'react';
-import { EXPERIENCE_DATA } from '../../data/portfolioData';
-import { Calendar, MapPin, Building, Filter } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Building, Calendar, Funnel, MapPin } from 'lucide-react';
+import { EXPERIENCE_DATA, SECTORS } from '../../data/portfolioData';
+import { Reveal, SectionHead, Tag } from '../ui';
+
+const FILTERS = [
+  { id: 'ALL', label: 'All domains', test: () => true },
+  {
+    id: 'Web & API',
+    label: 'Web & API',
+    test: (domain: string) => domain.includes('Web') || domain.includes('API')
+  },
+  { id: 'Mobile', label: 'Mobile', test: (domain: string) => domain.includes('Mobile') },
+  {
+    id: 'AD & Network',
+    label: 'AD & network',
+    test: (domain: string) => domain.includes('Active Directory') || domain.includes('Network')
+  },
+  {
+    id: 'Cloud & Red Team',
+    label: 'Cloud & red team',
+    test: (domain: string) => domain.includes('AWS') || domain.includes('Red Teaming')
+  },
+  { id: 'AI Security', label: 'AI security', test: (domain: string) => domain.includes('AI') },
+  {
+    id: 'AppSec',
+    label: 'AppSec & review',
+    test: (domain: string) => domain.includes('Code Review') || domain.includes('Release')
+  }
+];
 
 export const ExperienceApp: React.FC = () => {
-  const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
+  const [filter, setFilter] = useState('ALL');
 
-  const filterOptions = [
-    'ALL',
-    'Web & API',
-    'Mobile',
-    'Active Directory & Network',
-    'Cloud & Red Team',
-    'AI Security',
-    'AppSec & Code Review'
-  ];
+  const counts = useMemo(
+    () =>
+      Object.fromEntries(
+        FILTERS.map((option) => [
+          option.id,
+          EXPERIENCE_DATA.responsibilities.filter((item) => option.test(item.domain)).length
+        ])
+      ),
+    []
+  );
 
-  const filteredResponsibilities = EXPERIENCE_DATA.responsibilities.filter(r => {
-    if (selectedFilter === 'ALL') return true;
-    if (selectedFilter === 'Web & API') return r.domain.includes('Web') || r.domain.includes('API');
-    if (selectedFilter === 'Mobile') return r.domain.includes('Mobile');
-    if (selectedFilter === 'Active Directory & Network') return r.domain.includes('Active Directory') || r.domain.includes('Network');
-    if (selectedFilter === 'Cloud & Red Team') return r.domain.includes('AWS') || r.domain.includes('Red Teaming');
-    if (selectedFilter === 'AI Security') return r.domain.includes('AI');
-    if (selectedFilter === 'AppSec & Code Review') return r.domain.includes('Code Review') || r.domain.includes('Release');
-    return true;
-  });
+  const visible = useMemo(() => {
+    const option = FILTERS.find((item) => item.id === filter) ?? FILTERS[0];
+    return EXPERIENCE_DATA.responsibilities.filter((item) => option.test(item.domain));
+  }, [filter]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '6px' }}>
-      {/* Experience Overview Header */}
-      <div 
-        style={{
-          background: 'var(--bg-surface-elevated)',
-          border: '1px solid var(--border-active)',
-          borderRadius: '8px',
-          padding: '20px'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span className="badge-status">
-                PRIMARY ENGAGEMENT
-              </span>
-              <span style={{ color: 'var(--accent-amber)', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
-                FULL-TIME EMPLOYMENT
+    <div className="app">
+      <SectionHead
+        index="02"
+        eyebrow="Experience"
+        title="End-to-end,"
+        accent="not drive-by."
+        description="Every engagement runs from scoping and rules of engagement through exploitation, risk-rated reporting and retesting with the client's engineering teams."
+        meta={
+          <div className="sector-row">
+            {SECTORS.map((sector) => (
+              <Tag key={sector}>{sector}</Tag>
+            ))}
+          </div>
+        }
+      />
+
+      <Reveal>
+        <div className="panel xp-hero">
+          <div className="xp-logo">TCS</div>
+
+          <div className="xp-head-main">
+            <div className="xp-overline">
+              <span className="badge">Primary engagement</span>
+              <span className="mono" style={{ fontSize: 8, color: 'var(--paper-faint)' }}>
+                FULL-TIME · NEW DELHI
               </span>
             </div>
-
-            <h2 style={{ fontSize: 'clamp(17px, 4.5vw, 20px)', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-              {EXPERIENCE_DATA.role}
-            </h2>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '6px', color: 'var(--accent-green)', fontSize: '12px', flexWrap: 'wrap' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Building size={14} /> {EXPERIENCE_DATA.company}
+            <h3 className="xp-role">{EXPERIENCE_DATA.role}</h3>
+            <div className="xp-company">{EXPERIENCE_DATA.company}</div>
+            <div className="xp-meta">
+              <span>
+                <Calendar size={11} /> {EXPERIENCE_DATA.period}
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-                <Calendar size={14} /> {EXPERIENCE_DATA.period}
+              <span>
+                <MapPin size={11} /> {EXPERIENCE_DATA.location}
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-                <MapPin size={14} /> {EXPERIENCE_DATA.location}
+              <span>
+                <Building size={11} /> Enterprise security practice
               </span>
             </div>
           </div>
 
-          <div style={{ background: 'rgba(0, 0, 0, 0.4)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-subtle)', minWidth: 'min(100%, 220px)', flex: '1 1 200px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Client Spectrum</div>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--accent-amber)', fontFamily: 'var(--font-mono)' }}>10+ Enterprise Clients</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Banking · Payments · Health · Retail</div>
+          <div className="xp-clients">
+            <div className="xp-clients__value">10+</div>
+            <div className="xp-clients__label">Enterprise clients</div>
+            <div className="xp-clients__note">Banking · Payments · Health · Retail</div>
           </div>
-        </div>
 
-        <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)' }}>
-          <p className="font-sans" style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.6 }}>
-            {EXPERIENCE_DATA.summary} {EXPERIENCE_DATA.clientContext}
+          <p className="xp-hero__summary">
+            {EXPERIENCE_DATA.summary} <strong>{EXPERIENCE_DATA.clientContext}</strong>
           </p>
         </div>
-      </div>
+      </Reveal>
 
-      {/* Filter Chips */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>
-          <Filter size={12} /> Filter Domain:
+      <div className="xp-filterbar">
+        <span className="xp-filterbar__label">
+          <Funnel size={11} /> Filter domain
         </span>
-        {filterOptions.map(opt => (
+        {FILTERS.map((option) => (
           <button
-            key={opt}
-            onClick={() => setSelectedFilter(opt)}
-            style={{
-              padding: '4px 10px',
-              fontSize: '11px',
-              fontFamily: 'var(--font-mono)',
-              borderRadius: '4px',
-              border: selectedFilter === opt ? '1px solid var(--accent-green)' : '1px solid var(--border-subtle)',
-              background: selectedFilter === opt ? 'var(--accent-green-dim)' : 'var(--bg-surface)',
-              color: selectedFilter === opt ? 'var(--accent-green)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease'
-            }}
+            key={option.id}
+            type="button"
+            className="chip"
+            data-active={filter === option.id}
+            onClick={() => setFilter(option.id)}
           >
-            {opt}
+            {option.label}
+            <span className="count">{counts[option.id]}</span>
           </button>
         ))}
       </div>
 
-      {/* Responsibility Items */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {filteredResponsibilities.map((resp, idx) => (
-          <div
-            key={idx}
-            style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '6px',
-              padding: '16px',
-              transition: 'border-color 0.15s ease'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: 'var(--accent-green)', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
-                  {String(idx + 1).padStart(2, '0')}.
-                </span>
-                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-                  {resp.domain}
-                </h3>
-              </div>
-              <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                TCS ENGAGEMENT
-              </span>
-            </div>
-
-            <p className="font-sans" style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '12px' }}>
-              {resp.description}
-            </p>
-
-            {resp.toolsOrStandards && resp.toolsOrStandards.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {resp.toolsOrStandards.map((tool, tIdx) => (
-                  <span
-                    key={tIdx}
-                    style={{
-                      fontSize: '11px',
-                      fontFamily: 'var(--font-mono)',
-                      background: 'rgba(0, 0, 0, 0.4)',
-                      border: '1px solid var(--border-green-dim)',
-                      color: 'var(--text-primary)',
-                      padding: '2px 8px',
-                      borderRadius: '3px'
-                    }}
-                  >
-                    {tool}
+      <div className="xp-grid">
+        <AnimatePresence mode="popLayout" initial={false}>
+          {visible.map((item) => {
+            const originalIndex = EXPERIENCE_DATA.responsibilities.findIndex(
+              (entry) => entry.domain === item.domain
+            );
+            return (
+              <motion.div
+                key={item.domain}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="panel panel--interactive is-acid xp-card"
+              >
+                <div className="xp-card__top">
+                  <span className="xp-card__index">
+                    {String(originalIndex + 1).padStart(2, '0')} / 10
                   </span>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+                  <span className="xp-card__badge">TCS engagement</span>
+                </div>
+                <h4 className="xp-card__title">{item.domain}</h4>
+                <p className="xp-card__desc">{item.description}</p>
+                {item.toolsOrStandards?.length ? (
+                  <div className="tag-row xp-card__tools">
+                    {item.toolsOrStandards.map((tool) => (
+                      <span key={tool} className="tag">
+                        {tool}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                <span className="xp-card__watermark" aria-hidden="true">
+                  {String(originalIndex + 1).padStart(2, '0')}
+                </span>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
+
+      <Reveal>
+        <div className="app-note">
+          <Building size={12} />
+          <span>
+            All testing is performed under agreed rules of engagement with scoped production
+            verification — no disruption to live services.
+          </span>
+        </div>
+      </Reveal>
     </div>
   );
 };

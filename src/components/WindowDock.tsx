@@ -1,188 +1,189 @@
 import React from 'react';
+import { Briefcase, Cpu, Ellipsis, House, Mail, Menu, Shield, Terminal } from 'lucide-react';
+import { APP_MAP, DOCK_IDS } from '../data/apps';
 import type { WindowId, WindowState } from '../types/portfolio';
-import { 
-  Shield, 
-  Briefcase, 
-  Cpu, 
-  Award, 
-  Trophy, 
-  Terminal, 
-  Lock, 
-  BookOpen, 
-  GraduationCap, 
-  Mail
-} from 'lucide-react';
 import { sound } from '../utils/audio';
 
 interface WindowDockProps {
   windows: Record<WindowId, WindowState>;
   activeWindowId: WindowId | null;
   onToggleWindow: (id: WindowId) => void;
-  onFocusTerminal: () => void;
-  isTerminalMinimized: boolean;
-  onToggleTerminal: () => void;
-  isTerminalActive?: boolean;
+  onGoHome: () => void;
+  onOpenNav: () => void;
 }
+
+interface DockButtonProps {
+  label: string;
+  shortcut?: string;
+  isOpen: boolean;
+  isActive: boolean;
+  appId?: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}
+
+const DockButton: React.FC<DockButtonProps> = ({
+  label,
+  shortcut,
+  isOpen,
+  isActive,
+  appId,
+  onClick,
+  children
+}) => (
+  <button
+    type="button"
+    className="dock-item"
+    data-open={isOpen}
+    data-active={isActive}
+    data-app={appId}
+    onClick={onClick}
+    aria-label={label}
+    aria-pressed={isActive}
+  >
+    {children}
+    <span
+      className="dock-item__dot"
+      style={{ opacity: isOpen || isActive ? 1 : 0 }}
+      aria-hidden="true"
+    />
+    <span className="dock-item__tip" role="tooltip">
+      {label}
+      {shortcut ? <span className="kbd">{shortcut}</span> : null}
+    </span>
+  </button>
+);
 
 export const WindowDock: React.FC<WindowDockProps> = ({
   windows,
   activeWindowId,
   onToggleWindow,
-  onFocusTerminal: _onFocusTerminal,
-  isTerminalMinimized,
-  onToggleTerminal,
-  isTerminalActive = false
+  onGoHome,
+  onOpenNav
 }) => {
-  const dockApps: { id: WindowId; label: string; icon: React.ReactNode }[] = [
-    { id: 'about', label: 'About', icon: <Shield size={16} /> },
-    { id: 'experience', label: 'Experience', icon: <Briefcase size={16} /> },
-    { id: 'skills', label: 'Skills', icon: <Cpu size={16} /> },
-    { id: 'certs', label: 'Certs', icon: <Award size={16} /> },
-    { id: 'achievements', label: 'Honors', icon: <Trophy size={16} /> },
-    { id: 'labs', label: 'Labs', icon: <Terminal size={16} /> },
-    { id: 'methodology', label: 'Standards', icon: <BookOpen size={16} /> },
-    { id: 'projects', label: 'Projects', icon: <Lock size={16} /> },
-    { id: 'education', label: 'Education', icon: <GraduationCap size={16} /> },
-    { id: 'contact', label: 'Contact', icon: <Mail size={16} /> },
-  ];
+  const terminal = windows.terminal;
 
   return (
-    <div
-      className="taskbar-dock no-scrollbar"
-      style={{
-        position: 'fixed',
-        bottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        height: 'var(--dock-height)',
-        padding: '0 8px',
-        background: 'rgba(16, 20, 17, 0.94)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid var(--border-green-dim)',
-        borderRadius: '12px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.75), 0 0 12px rgba(163, 255, 111, 0.08)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        zIndex: 9000,
-        maxWidth: 'calc(100vw - 16px)',
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        touchAction: 'pan-x'
-      }}
-    >
-      {/* Terminal Launcher */}
-      <button
+    <nav className="dock" aria-label="Application dock">
+      <DockButton
+        label="Home"
+        isOpen={false}
+        isActive={activeWindowId === null}
+        onClick={onGoHome}
+      >
+        <House size={17} />
+      </DockButton>
+
+      <span className="dock__sep" aria-hidden="true" />
+
+      <DockButton
+        label="Terminal"
+        shortcut="Ctrl `"
+        appId="terminal"
+        isOpen={terminal.isOpen && !terminal.isMinimized}
+        isActive={activeWindowId === 'terminal'}
         onClick={() => {
           sound.playWindowAction();
-          onToggleTerminal();
-        }}
-        title="Terminal Console"
-        aria-label="Toggle Terminal Console"
-        style={{
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '38px',
-          height: '38px',
-          minWidth: '38px',
-          flexShrink: 0,
-          borderRadius: '8px',
-          background: isTerminalActive 
-            ? 'var(--accent-green-dim)' 
-            : !isTerminalMinimized 
-            ? 'rgba(255, 255, 255, 0.05)' 
-            : 'transparent',
-          border: isTerminalActive 
-            ? '1px solid var(--accent-green)' 
-            : !isTerminalMinimized 
-            ? '1px solid var(--border-subtle)' 
-            : '1px solid transparent',
-          color: isTerminalActive 
-            ? 'var(--accent-green)' 
-            : !isTerminalMinimized 
-            ? 'var(--text-primary)' 
-            : 'var(--text-secondary)',
-          cursor: 'pointer',
-          transition: 'all 0.15s ease'
+          onToggleWindow('terminal');
         }}
       >
-        <Terminal size={16} />
-        {/* Active Dot */}
-        <span
-          style={{
-            position: 'absolute',
-            bottom: '2px',
-            width: '4px',
-            height: '4px',
-            borderRadius: '50%',
-            background: isTerminalActive 
-              ? 'var(--accent-green)' 
-              : !isTerminalMinimized 
-              ? 'var(--accent-amber)' 
-              : 'transparent',
-            boxShadow: isTerminalActive ? '0 0 4px var(--accent-green)' : 'none'
-          }}
-        />
-      </button>
+        <Terminal size={17} />
+      </DockButton>
 
-      {/* Vertical separator */}
-      <div style={{ width: '1px', height: '22px', background: 'var(--border-subtle)', margin: '0 2px', flexShrink: 0 }} />
+      <span className="dock__sep" aria-hidden="true" />
 
-      {/* Application Launchers */}
-      {dockApps.map((app) => {
-        const win = windows[app.id];
-        const isOpen = win?.isOpen;
-        const isActive = activeWindowId === app.id && isOpen && !win.isMinimized;
-
+      {DOCK_IDS.map((id) => {
+        const app = APP_MAP[id];
+        const Icon = app.icon;
+        const win = windows[id];
         return (
-          <button
-            key={app.id}
+          <DockButton
+            key={id}
+            label={app.label}
+            shortcut={app.shortcut ? `Alt ${app.shortcut}` : undefined}
+            appId={id}
+            isOpen={win.isOpen && !win.isMinimized}
+            isActive={activeWindowId === id}
             onClick={() => {
               sound.playWindowAction();
-              onToggleWindow(app.id);
-            }}
-            title={app.label}
-            aria-label={`Open ${app.label}`}
-            style={{
-              position: 'relative',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '38px',
-              height: '38px',
-              minWidth: '38px',
-              flexShrink: 0,
-              borderRadius: '8px',
-              background: isActive ? 'var(--accent-green-dim)' : isOpen ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
-              border: isActive ? '1px solid var(--accent-green)' : isOpen ? '1px solid var(--border-subtle)' : '1px solid transparent',
-              color: isActive ? 'var(--accent-green)' : isOpen ? 'var(--text-primary)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease'
+              onToggleWindow(id);
             }}
           >
-            {app.icon}
-            {/* Dot indicator for open state */}
-            {isOpen && (
-              <span
-                style={{
-                  position: 'absolute',
-                  bottom: '2px',
-                  width: '4px',
-                  height: '4px',
-                  borderRadius: '50%',
-                  background: isActive ? 'var(--accent-green)' : 'var(--accent-amber)',
-                  boxShadow: isActive ? '0 0 4px var(--accent-green)' : 'none'
-                }}
-              />
-            )}
-          </button>
+            <Icon size={17} />
+          </DockButton>
         );
       })}
-    </div>
+
+      <span className="dock__sep" aria-hidden="true" />
+
+      <DockButton label="All modules" isOpen={false} isActive={false} onClick={onOpenNav}>
+        <Ellipsis size={17} />
+      </DockButton>
+    </nav>
   );
 };
+
+/* --------------------------------------------------------------------------
+   Mobile bottom navigation
+   -------------------------------------------------------------------------- */
+
+interface MobileNavProps {
+  activeWindowId: WindowId | null;
+  onOpenWindow: (id: WindowId) => void;
+  onGoHome: () => void;
+  onOpenNav: () => void;
+}
+
+const items = [
+  { id: 'home' as const, label: 'Home', icon: House },
+  { id: 'about' as const, label: 'Profile', icon: Shield },
+  { id: 'experience' as const, label: 'Work', icon: Briefcase },
+  { id: 'skills' as const, label: 'Skills', icon: Cpu },
+  { id: 'contact' as const, label: 'Contact', icon: Mail }
+];
+
+export const MobileNav: React.FC<MobileNavProps> = ({
+  activeWindowId,
+  onOpenWindow,
+  onGoHome,
+  onOpenNav
+}) => (
+  <nav className="mnav" aria-label="Mobile navigation">
+    {items.map((item) => {
+      const Icon = item.icon;
+      const isHome = item.id === 'home';
+      const active = isHome ? activeWindowId === null : activeWindowId === item.id;
+      return (
+        <button
+          key={item.id}
+          type="button"
+          className="mnav__item"
+          data-active={active}
+          data-app={isHome ? undefined : item.id}
+          onClick={() => {
+            sound.playWindowAction();
+            if (isHome) onGoHome();
+            else onOpenWindow(item.id);
+          }}
+          aria-current={active ? 'page' : undefined}
+        >
+          <Icon size={17} />
+          <span>{item.label}</span>
+        </button>
+      );
+    })}
+
+    <button
+      type="button"
+      className="mnav__item"
+      onClick={() => {
+        sound.playWindowAction();
+        onOpenNav();
+      }}
+      aria-label="Open all modules"
+    >
+      <Menu size={17} />
+      <span>Menu</span>
+    </button>
+  </nav>
+);

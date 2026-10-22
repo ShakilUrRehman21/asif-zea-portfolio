@@ -1,163 +1,121 @@
-# Asif Zea — Interactive Linux Workstation Portfolio
+# Asif Zea — Interactive Security Workstation
 
-[![Security Role](https://img.shields.io/badge/Role-Application%20Security%20Engineer-A3FF6F?style=for-the-badge&logo=shield&logoColor=black)](https://github.com)
-[![Company](https://img.shields.io/badge/Company-Tata%20Consultancy%20Services-E5B567?style=for-the-badge)](https://www.tcs.com)
-[![Kernel Version](https://img.shields.io/badge/OS-AZ--SECURE%20Linux%206.11.4--hardened-64B5F6?style=for-the-badge&logo=linux&logoColor=white)](https://github.com)
-[![Build Status](https://img.shields.io/badge/Build-Passing%20(Vite%20%2B%20TypeScript)-brightgreen?style=for-the-badge)](https://github.com)
+[![React](https://img.shields.io/badge/React-19-61dafb.svg?style=flat-square&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-8-646cff.svg?style=flat-square&logo=vite)](https://vitejs.dev/)
+[![Motion](https://img.shields.io/badge/Motion-React-f08.svg?style=flat-square)](https://motion.dev/)
+[![License](https://img.shields.io/badge/License-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 
-> **Live Workstation Simulation**: An interactive, cyber-hardened personal Linux workstation environment for **Asif Zea**, Application Security Engineer and Penetration Tester at Tata Consultancy Services (TCS).
-
----
-
-## 🖥️ Workstation Experience Overview
-
-This portfolio abandons generic SaaS templates in favor of an **authentic, engineered Linux operating system simulation**. Visitors interact with Asif Zea's real-world cybersecurity background, technical skill matrix, enterprise engagements, certifications, and hands-on lab research through a fully functional Unix desktop environment.
-
-### Core User Journey
-1. **Cinematic Boot Sequence**: Kernel hardware initialization, ACPI timer synchronization, encrypted `/home/asif` LUKS volume mounting, and AppArmor policy enforcement (with instant `[ESC]` skip).
-2. **PAM Root/User Authentication**: Simulated Pluggable Authentication Module credential verification.
-3. **Interactive Terminal Shell**: Authentic bash prompt (`asif@az-secure:~$`) supporting keyboard input, autocomplete (`Tab`), history cycling (`Arrow Up / Down`), and quick command selector chips.
-4. **Line-by-Line Execution Engine**: Commands stream terminal responses line-by-line (`[ OK ]`) with realistic delays before launching dedicated application windows.
-5. **Managed Window Desktop**: Multi-window manager featuring free desktop dragging, z-index stacking, minimize/maximize/close actions, safe dock margins, and responsive full-screen mobile behavior.
-6. **Command Palette (`Ctrl+K`)**: Instant searchable modal overlay for direct command and module execution.
+An interactive, browser-based security workstation and professional portfolio for **Asif Zea** — Application Security Engineer & Penetration Tester. Built with a bespoke desktop operating system metaphor, complete with a secure boot sequence, workstation unlock screen, multi-window desktop shell, live interactive bash terminal, command palette, and reactive cyber matrix background.
 
 ---
 
-## 🛡️ Verified Credentials & Career Profile
+## 🖥️ Live Preview & Screenshots
 
-All technical details and achievements are verified directly from Asif Zea's professional track record:
+| Desktop Workstation Home | Interactive Terminal Shell |
+| :---: | :---: |
+| ![Desktop Home](preview/home-desktop.jpg) | ![Terminal](preview/terminal-desktop.jpg) |
 
-### 💼 Professional Experience
-* **Application Security Engineer & Penetration Tester** — **Tata Consultancy Services (TCS)** *(Nov 2023 – Present)*
-  * Delivers end-to-end vulnerability assessments and penetration testing for **10+ enterprise clients** across global payments, retail banking, insurance, healthcare, and retail sectors.
-  * Conducts black-box and grey-box security assessments across web apps, REST APIs, microservices, mobile apps (Android/iOS), Active Directory networks, and AWS cloud infrastructures under strict rules of engagement.
-  * Identifies critical business-logic vulnerabilities, Broken Object-Level Authorization (BOLA/IDOR), authentication bypasses, race conditions, and server-side request forgeries (SSRF).
-  * Executes red teaming assessments, adversary attack simulations, and internal Active Directory domain privilege escalations.
-  * Conducts manual and tool-assisted secure code reviews (Checkmarx + manual source auditing) with remediation consultation for developer teams.
+| Workstation Unlock | Profile & Credentials Module |
+| :---: | :---: |
+| ![Unlock Screen](preview/login.jpg) | ![Profile Module](preview/profile-desktop.jpg) |
 
-### 📜 Verified Industry Certifications
-* **HTB CPTS** — Certified Penetration Testing Specialist *(HackTheBox)*
-* **CPENT** — Certified Penetration Testing Professional *(EC-Council)*
-* **AWS SAA** — AWS Certified Solutions Architect – Associate *(Amazon Web Services)*
-* **CAP** — Certified AppSec Practitioner *(The SecOps Group)*
-* **CNSP** — Certified Network Security Practitioner *(The SecOps Group)*
-
-### 🏆 Honors & Competitions
-* **TCS On the Spot Award (2026)** — Recognized by TCS project leadership for identifying critical multi-tenant authorization flaws and providing rapid remediation guidance.
-* **TCS HackQuest Season 7 National Finalist** — Ranked among the **top 55 finalists out of 40,000+ national participants** in TCS's flagship national ethical hacking competition.
-
-### 🧪 Security Labs & Continuous Research
-* **Active Directory Multi-Forest Homelab**: Dedicated hypervisor cluster running simulated Windows Server Domain Controllers, Kerberos delegation attacks, BloodHound path analysis, and NetExec post-exploitation.
-* **HackTheBox ProLabs & Machines**: Offensive security engagements focused on Linux privilege escalation, customized buffer overflows, and evasion techniques.
-* **PortSwigger Web Security Academy**: Web vulnerability research focusing on HTTP request smuggling, OAuth2 token handling, JWT vulnerabilities, and GraphQL injection.
-
-### 🎓 Academic Background
-* **Bachelor of Technology (B.Tech)** — **Jamia Millia Islamia** *(Class of 2023, New Delhi, India)*
+| Command Palette (`Ctrl/Cmd + K`) | Mobile Workstation View |
+| :---: | :---: |
+| ![Command Palette](preview/command-palette.jpg) | ![Mobile Home](preview/home-mobile.jpg) |
 
 ---
 
-## ⌨️ Terminal Command Reference
+## ✨ Features
 
-Type any of the following commands into the terminal or press their global hotkey:
-
-| Command | Shortcut | Description | Target Module |
-|:---|:---:|:---|:---|
-| `whoami` | `Alt+W` | Display operator identity & security clearance | Output Stream |
-| `about` | `Alt+A` | Open executive profile & domain summary | `ABOUT.APP` |
-| `experience` | `Alt+E` | Open TCS enterprise experience & client spectrum | `EXPERIENCE.APP` |
-| `skills` | `Alt+S` | Open offensive & defensive toolmatrix | `SKILLS.APP` |
-| `certs` | `Alt+R` | Open verified industry certifications | `CERTS.APP` |
-| `achievements` | `Alt+T` | Open awards, honors & HackQuest Season 7 finalist details | `ACHIEVEMENTS.APP` |
-| `labs` | `Alt+L` | Open hands-on homelab & research documentation | `LABS.APP` |
-| `methodology` | `Alt+M` | Open assessment frameworks (OWASP WSTG, ASVS, MASTG) | `METHODOLOGY.APP` |
-| `projects` | `Alt+P` | Client confidentiality notice & research links | `PROJECTS.APP` |
-| `education` | `Alt+U` | View B.Tech academic credentials from Jamia Millia Islamia | `EDUCATION.APP` |
-| `contact` | `Alt+C` | View secure communications & contact details | `CONTACT.APP` |
-| `neofetch` | — | Display system hardware & kernel telemetry banner | Output Stream |
-| `help` | — | Print formatted help table of all available commands | Output Stream |
-| `history` | — | List previously executed commands in this session | Output Stream |
-| `clear` | — | Clear current terminal log buffer | Terminal Buffer |
-| `close-all` | — | Close all open application windows | Window Manager |
-| `exit` / `lock` | — | Lock workstation and return to login screen | Login Screen |
-
----
-
-## 🚀 Technical Architecture & Features
-
-```
-asif-zea-portfolio/
-├── index.html                   # HTML entry point, SEO meta, JetBrains Mono & Inter typography
-├── src/
-│   ├── App.tsx                  # Master lifecycle controller (Boot -> Login -> Desktop)
-│   ├── main.tsx                 # React DOM mount root
-│   ├── index.css                # Custom CSS design system, phosphor variables & CRT scanline
-│   ├── types/
-│   │   └── portfolio.ts         # TypeScript definitions for commands, windows, and CV data
-│   ├── data/
-│   │   └── portfolioData.ts     # Verified CV data records (experience, certs, skills, honors)
-│   ├── utils/
-│   │   └── audio.ts             # Web Audio API procedural audio synthesizer (foley effects)
-│   ├── commands/
-│   │   └── commandRegistry.ts   # Command parser, aliases, and execution dispatch table
-│   └── components/
-│       ├── CyberBackground.tsx  # Calm phosphor-green hex/opcode matrix rain stream
-│       ├── BootSequence.tsx     # Cinematic kernel boot log screen with ESC skip
-│       ├── LoginScreen.tsx      # PAM login prompt with credential validation
-│       ├── SystemBar.tsx        # Top system bar (host info, live clock, VPN indicator, audio)
-│       ├── TerminalPanel.tsx    # Primary bash interactive shell with history & autocomplete
-│       ├── CommandPalette.tsx   # Ctrl+K instant modal command palette
-│       ├── WindowManager.tsx    # Multi-window coordinator & z-index stack manager
-│       ├── ApplicationWindow.tsx# Draggable floating windows with dynamic desktop bounds
-│       ├── WindowDock.tsx       # Bottom application switcher dock with active dot indicators
-│       └── apps/                # Interactive application modules
-│           ├── AboutApp.tsx
-│           ├── ExperienceApp.tsx
-│           ├── SkillsApp.tsx
-│           ├── CertificationsApp.tsx
-│           ├── AchievementsApp.tsx
-│           ├── LabsApp.tsx
-│           ├── ProjectsApp.tsx
-│           ├── MethodologyApp.tsx
-│           ├── EducationApp.tsx
-│           └── ContactApp.tsx
-```
-
-### Motion & Audio Design Highlights
-* **Calm Hex/Opcode Background (`CyberBackground.tsx`)**: High-performance HTML5 canvas rendering falling hex memory offsets (`0x4A`, `0xDEAD`), binary streams, and x86_64 opcodes without screen strobing or light flickers.
-* **Procedural Sound Synthesizer (`audio.ts`)**: Built using native browser `AudioContext` — zero external MP3/WAV dependencies. Generates authentic tactile keyclicks, enter beeps, window action chirps, and provides a persistent mute toggle in the top bar.
-* **Free-Form Window Dragging (`ApplicationWindow.tsx`)**: Desktop drag constraints allow users to drag windows anywhere across the desktop, including the far right and bottom corners, with subtle inertia and elastic edge resistance.
-* **Mobile-First Responsive Layout**: On touch viewports, windows smoothly pin between the top bar and dock with `-webkit-overflow-scrolling: touch`, compact prompts (`asif:~$`), and a horizontally scrollable dock.
+- **Boot Sequence (`AZ-BIOS`):** Realistic secure-boot sequence rendering the AZ emblem, system diagnostics, and hardware initialization in under 2 seconds (skippable via any keystroke or click).
+- **Workstation Gate:** Cyberpunk-styled terminal login gate featuring an animated biometric fingerprint scanner and one-click direct workstation entry.
+- **Centered Command Center Hero:** Clean, centered dual-column layout with high-impact typography, real-time typing bash console preview, quick-action chips, and key industry metrics.
+- **Interactive Bash Shell:** 
+  - 27+ built-in commands (`neofetch`, `whoami`, `cat`, `nmap`, `certs`, `labs`, `skills`, `clear`, `help`, etc.).
+  - Perfectly aligned dual-column ASCII art `neofetch` output.
+  - Tab completion, command history (`↑` / `↓`), inline execution hints, and auto-scrolling buffer.
+- **Theme Switcher:** Instant runtime switching across 3 curated cyberpunk themes:
+  - 🟢 **Matrix Green** (Phosphor terminal green)
+  - 🔵 **Cyber Cyan** (Ice blue tech aesthetic)
+  - 🟡 **Champagne Amber** (Refined warm golden hue)
+- **Interactive Atmosphere:**
+  - High-performance HTML5 Canvas matrix digital rain with real-time hex strings and column streams.
+  - Subtle mouse-tracking radial beam glow with dynamic cursor lighting.
+- **Multi-Window Desktop OS:**
+  - 10 draggable, stackable, and maximizable window modules:
+    - `About` — Bio, summary, and security domains
+    - `Experience` — 3+ years at Tata Consultancy Services (TCS) across global banking, payments, and healthcare
+    - `Certifications` — HTB CPTS, EC-Council CPENT, AWS SAA, SecOps CAP, SecOps CNSP
+    - `Achievements` — TCS On the Spot Team Award, TCS HackQuest Season 7 Top 100
+    - `Skills` — Web, Mobile, API, Active Directory, Cloud, AI/LLM Security
+    - `Labs` — HackTheBox, Pro Labs, VulnHub, PortSwigger Web Security Academy
+    - `Projects & Tools` — Custom security utilities, automation scripts, exploit writeups
+    - `Methodology` — OWASP WSTG, MASTG, ASVS, NIST, PTES, MITRE ATT&CK
+    - `Education` — B.Tech, Jamia Millia Islamia (2023)
+    - `Contact` — Secure contact channel with local `mailto:` generator
+- **Global Command Palette (`⌘K` / `Ctrl+K`):** Fuzzy-searchable index to quickly jump to any module or execute shell actions.
+- **Audio Feedback System:** Subtle synthesised mechanical clicks and terminal beeps (with a global mute toggle in the top bar).
+- **Deep Linking & Persistence:** URL hash navigation (`/#experience`, `/#certs`, `/#terminal`) and `sessionStorage` persistence across browser refreshes.
 
 ---
 
-## 🛠️ Local Development & Build
+## ⌨️ Global Keyboard Shortcuts
+
+| Shortcut | Description |
+| :--- | :--- |
+| `Ctrl` / `Cmd` + `K` | Toggle Command Palette |
+| `Ctrl` + `` ` `` | Toggle Terminal Console |
+| `Alt` + `1` – `9` | Launch corresponding window module |
+| `Esc` | Close active modal, palette, or top-most window |
+| `Tab` / `Shift+Tab` | Autocomplete command in Terminal |
+| `↑` / `↓` | Navigate Terminal command history |
+
+---
+
+## 🛠️ Tech Stack
+
+- **Core:** React 19, TypeScript 5.9
+- **Build Tool:** Vite 8
+- **Motion & Interactions:** Motion (Framer Motion v12)
+- **Icons:** Lucide React
+- **Sound:** Web Audio API synth oscillators (zero external audio file dependencies)
+- **Styling:** Vanilla CSS design tokens with custom typography (Syne, Instrument Serif, JetBrains Mono)
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-* [Node.js](https://nodejs.org/) (version 18 or higher recommended)
-* `npm` or `pnpm`
+
+- Node.js (v18.0.0 or higher recommended)
+- npm or pnpm
 
 ### Installation
+
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/asif-zea-portfolio.git
+git clone https://github.com/shakilurrehman21/asif-zea-portfolio.git
 
-# Navigate into the project directory
+# Enter project directory
 cd asif-zea-portfolio
 
 # Install dependencies
 npm install
 ```
 
-### Run Locally
+### Development
+
 ```bash
-# Start local development server (with HMR)
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser to view the portfolio.
+
+Visit `http://localhost:5173` to explore the workstation locally.
 
 ### Production Build
+
 ```bash
-# Typecheck and bundle for production
+# Typecheck and build production bundle
 npm run build
 
 # Preview production build locally
@@ -166,36 +124,54 @@ npm run preview
 
 ---
 
-## 📤 Pushing to GitHub
+## 📁 Project Structure
 
-To push this repository to your GitHub account:
-
-1. **Create a new repository on GitHub** (e.g. named `asif-zea-portfolio` or `portfolio`). Do not initialize with a README since this repository already has one.
-2. **Run the following commands in your terminal**:
-
-```bash
-# Initialize git if not already initialized
-git init -b main
-
-# Stage all files
-git add .
-
-# Create the initial commit
-git commit -m "feat: complete interactive Linux workstation portfolio for Asif Zea"
-
-# Link your GitHub remote repository
-git remote add origin https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME.git
-
-# Push to GitHub
-git push -u origin main
+```text
+asif-zea-portfolio/
+├── preview/                     # Screenshots and visual media
+├── public/                      # Static assets
+├── src/
+│   ├── commands/                # Terminal command registry and handlers
+│   │   └── commandRegistry.ts   # 27+ executable shell commands
+│   ├── components/              # Shell, window manager, and UI primitives
+│   │   ├── apps/                # 10 dedicated application window modules
+│   │   ├── ApplicationWindow.tsx# Draggable, resizable window frame
+│   │   ├── BootSequence.tsx     # BIOS startup animation
+│   │   ├── CommandPalette.tsx   # Global search palette
+│   │   ├── CursorGlow.tsx       # Interactive mouse beam
+│   │   ├── CyberBackground.tsx  # Matrix rain canvas
+│   │   ├── DesktopHome.tsx      # Centered command center hero & console
+│   │   ├── DesktopShell.tsx     # OS desktop orchestrator
+│   │   ├── LoginScreen.tsx      # Terminal login gate
+│   │   ├── SystemBar.tsx        # Top status bar & theme picker
+│   │   ├── TerminalPanel.tsx    # Interactive terminal shell
+│   │   └── WindowDock.tsx       # Bottom taskbar dock
+│   ├── data/                    # Structured portfolio data and app configs
+│   │   ├── apps.ts              # Window registry & metadata
+│   │   └── portfolioData.ts     # Asif Zea's professional credentials
+│   ├── styles/                  # Clean modular CSS architecture
+│   │   ├── apps.css             # Window app styles
+│   │   └── shell.css            # Desktop shell, topbar, dock, and windows
+│   ├── types/                   # TypeScript interfaces
+│   ├── utils/                   # Audio synth and theme manager
+│   ├── App.tsx                  # Root stage controller (Boot -> Login -> Desktop)
+│   ├── index.css                # CSS variables, typography, and reset
+│   └── main.tsx                 # React entry point
+├── .gitignore                   # Ignored files and build artifacts
+├── index.html                   # HTML entry point with preload tags
+├── package.json                 # Project dependencies & scripts
+├── tsconfig.json                # TypeScript configuration
+└── vite.config.ts               # Vite configuration
 ```
 
 ---
 
-## 🔒 Confidentiality & Ethical Notice
-Client engagement specifics conducted during tenure at Tata Consultancy Services (TCS) are described in accordance with binding Non-Disclosure Agreements (NDAs). Proprietary source code, client infrastructure addresses, and confidential vulnerability reports are strictly omitted.
+## 🔒 Security & Privacy Notice
+
+All engagements, client identities, and vulnerability details conform to strict Non-Disclosure Agreements (NDAs). Case studies highlight methodologies and technical impact rather than proprietary client artifacts. The contact form operates purely client-side via a local `mailto:` handler; no telemetry, cookies, or remote tracking are used.
 
 ---
 
 ## 📄 License
-This project is open-source and available under the [MIT License](LICENSE).
+
+This project is licensed under the [MIT License](LICENSE).

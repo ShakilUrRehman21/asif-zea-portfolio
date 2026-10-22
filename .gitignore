@@ -1,3 +1,20 @@
+# Dependencies
+node_modules
+/.pnp
+.pnp.js
+
+# Production build artifacts
+dist
+dist-ssr
+
+# Environment variables & local configuration
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local
+
 # Logs
 logs
 *.log
@@ -7,18 +24,21 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
+# Editor & OS files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# TypeScript build info & test coverage
+*.tsbuildinfo
+coverage
+
+# IDE & agent artifacts
+.gemini

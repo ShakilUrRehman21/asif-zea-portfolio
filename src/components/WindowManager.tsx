@@ -16,6 +16,8 @@ import { ContactApp } from './apps/ContactApp';
 interface WindowManagerProps {
   windows: Record<WindowId, WindowState>;
   activeWindowId: WindowId | null;
+  isMobile: boolean;
+  terminalNode: React.ReactNode;
   onFocusWindow: (id: WindowId) => void;
   onCloseWindow: (id: WindowId) => void;
   onMinimizeWindow: (id: WindowId) => void;
@@ -26,6 +28,8 @@ interface WindowManagerProps {
 export const WindowManager: React.FC<WindowManagerProps> = ({
   windows,
   activeWindowId,
+  isMobile,
+  terminalNode,
   onFocusWindow,
   onCloseWindow,
   onMinimizeWindow,
@@ -51,11 +55,13 @@ export const WindowManager: React.FC<WindowManagerProps> = ({
       case 'methodology':
         return <MethodologyApp />;
       case 'education':
-        return <EducationApp />;
+        return <EducationApp onOpenWindow={onOpenWindow} />;
       case 'contact':
         return <ContactApp />;
+      case 'terminal':
+        return terminalNode;
       default:
-        return <div>Unknown application.</div>;
+        return null;
     }
   };
 
@@ -63,13 +69,14 @@ export const WindowManager: React.FC<WindowManagerProps> = ({
     <AnimatePresence>
       {(Object.keys(windows) as WindowId[]).map((id) => {
         const win = windows[id];
-        if (!win.isOpen) return null;
+        if (!win.isOpen || win.isMinimized) return null;
 
         return (
           <ApplicationWindow
             key={win.id}
             windowState={win}
             isActive={activeWindowId === win.id}
+            isMobile={isMobile}
             onFocus={() => onFocusWindow(win.id)}
             onClose={() => onCloseWindow(win.id)}
             onMinimize={() => onMinimizeWindow(win.id)}

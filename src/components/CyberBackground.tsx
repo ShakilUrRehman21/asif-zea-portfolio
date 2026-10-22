@@ -1,134 +1,133 @@
 import React, { useEffect, useRef } from 'react';
+import { usePageVisible } from '../utils/hooks';
 
+const TOKENS = [
+  '0x4A', '0x7F', '0x9C', '0xB2', '0x1A', '0x00', '0xFF', '0x89',
+  '0xE5', '0xEC', '0x31', '0xC0', '0xC3', '0x90', '0x55', '0x48',
+  '1011', '0100', '1100', '0010', '0111', '0101', '1010', '1111',
+  '48 89', '83 EC', 'B8 01', '0F 05', 'FF 25', '75 1A', 'EB 0C',
+  '0xDEAD', '0xBEEF', '0xCAFE', '0x1337', '0x7FFF'
+];
+
+interface Stream {
+  x: number;
+  y: number;
+  speed: number;
+  accent: boolean;
+  chars: string[];
+}
+
+/**
+ * Layered ambience: data rain canvas + aurora, dot grid, scanlines, grain.
+ * Deliberately low-contrast so content always wins.
+ */
 export const CyberBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const visible = usePageVisible();
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
-    let animationFrameId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let width = 0;
+    let height = 0;
+    let streams: Stream[] = [];
+    let raf = 0;
+    let last = 0;
 
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+    const randomChars = (length: number) =>
+      Array.from({ length }, () => TOKENS[Math.floor(Math.random() * TOKENS.length)]);
+
+    const setup = () => {
+      const spacing = width < 760 ? 74 : 60;
+      const columnCount = Math.ceil(width / spacing);
+      streams = Array.from({ length: columnCount }, (_, i) => ({
+        x: i * spacing + 10,
+        y: Math.random() * height * 1.5 - height * 0.45,
+        speed: 0.16 + Math.random() * 0.22,
+        accent: i % 7 === 0,
+        chars: randomChars(14)
+      }));
     };
 
-    window.addEventListener('resize', handleResize);
-
-    // Static authentic hex numbers, 8-bit & 4-bit binary, and assembly opcodes
-    const tokens = [
-      '0x4A', '0x7F', '0x9C', '0xB2', '0x1A', '0x00', '0xFF', '0x89',
-      '0xE5', '0xEC', '0x31', '0xC0', '0xC3', '0x90', '0x55', '0x48',
-      '10110010', '01001001', '11001100', '00101101', '01110000',
-      '0101', '1010', '1111', '0000', '1100', '0011', '1001', '0110',
-      '48 89', '83 EC', 'B8 01', '0F 05', 'FF 25', '75 1A', 'EB 0C',
-      '0xDEAD', '0xBEEF', '0xCAFE', '0xBABE', '0x1337', '0x7FFF'
-    ];
-
-    const fontSize = 12;
-    const colSpacing = 44;
-    const columns = Math.ceil(width / colSpacing);
-
-    // Stable column state: each column has its own stream of characters and calm, steady speed
-    const streamLength = 22; // Number of characters in each trailing column
-    const streams: {
-      x: number;
-      y: number;
-      speed: number;
-      chars: string[];
-      isAmber: boolean;
-    }[] = [];
-
-    for (let i = 0; i < columns; i++) {
-      const colChars: string[] = [];
-      for (let j = 0; j < streamLength; j++) {
-        colChars.push(tokens[Math.floor(Math.random() * tokens.length)]);
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.font = "500 10px 'JetBrains Mono', monospace";
+      ctx.textBaseline = 'top';
+      setup();
+      if (reduced) {
+        ctx.clearRect(0, 0, width, height);
+        for (const stream of streams) drawStream(stream);
       }
+    };
 
-      streams.push({
-        x: i * colSpacing + 10,
-        y: (Math.random() * height * 1.5) - height * 0.5,
-        speed: 0.45 + (i % 3) * 0.15, // Constant, gentle, non-flickering speed
-        chars: colChars,
-        isAmber: i % 7 === 0 // Steady, non-flickering amber accent
-      });
-    }
+    let rgb = getComputedStyle(document.documentElement).getPropertyValue('--acid-rgb').trim() || '184, 255, 120';
+    const onTheme = () => {
+      rgb = getComputedStyle(document.documentElement).getPropertyValue('--acid-rgb').trim() || '184, 255, 120';
+    };
+    window.addEventListener('az-theme-changed', onTheme);
 
-    ctx.font = `${fontSize}px 'JetBrains Mono', monospace`;
-    ctx.textBaseline = 'top';
+    const drawStream = (stream: Stream) => {
+      for (let j = 0; j < stream.chars.length; j += 1) {
+        const y = stream.y - j * 16;
+        if (y < -24 || y > height + 24) continue;
+        const alpha = j === 0 ? 0.82 : Math.max(0.12, 0.46 - j * 0.026);
+        ctx.fillStyle = stream.accent
+          ? `rgba(${rgb}, ${Math.min(1, alpha * 1.15)})`
+          : `rgba(${rgb}, ${alpha})`;
+        ctx.fillText(stream.chars[j], stream.x, y);
+      }
+    };
 
-    const render = () => {
-      // Clean clear: NO semi-transparent overlay flashing
+    const render = (now: number) => {
+      raf = requestAnimationFrame(render);
+      if (now - last < 32) return;
+      const delta = Math.min(64, now - last);
+      last = now;
+
       ctx.clearRect(0, 0, width, height);
 
-      // Render each stream calmly
-      for (let i = 0; i < streams.length; i++) {
-        const stream = streams[i];
-        const { x, chars, isAmber } = stream;
-
-        for (let j = 0; j < chars.length; j++) {
-          const charY = stream.y - j * (fontSize + 6);
-
-          if (charY > -20 && charY < height + 20) {
-            // Steady, smooth gradient down the tail with ZERO flicker or shadowBlur
-            const distanceRatio = (chars.length - j) / chars.length;
-
-            if (j === 0) {
-              // Lead character: steady calm highlight, NO blinking
-              ctx.fillStyle = isAmber 
-                ? 'rgba(229, 181, 103, 0.45)' 
-                : 'rgba(163, 255, 111, 0.45)';
-            } else {
-              // Trailing characters: steady, soft, legible phosphor tone
-              const alpha = 0.05 + distanceRatio * 0.16;
-              ctx.fillStyle = isAmber 
-                ? `rgba(229, 181, 103, ${alpha})` 
-                : `rgba(163, 255, 111, ${alpha})`;
-            }
-
-            ctx.fillText(chars[j], x, charY);
-          }
-        }
-
-        // Advance position steadily
-        stream.y += stream.speed;
-
-        // Reset cleanly once past bottom
-        if (stream.y - streamLength * (fontSize + 6) > height) {
-          stream.y = 0;
+      for (const stream of streams) {
+        drawStream(stream);
+        stream.y += stream.speed * (delta / 16.67);
+        if (stream.y - stream.chars.length * 16 > height) {
+          stream.y = -Math.random() * height * 0.5;
+          stream.chars = randomChars(14);
         }
       }
-
-      animationFrameId = requestAnimationFrame(render);
     };
 
-    animationFrameId = requestAnimationFrame(render);
+    resize();
+    window.addEventListener('resize', resize);
+
+    if (!reduced) {
+      raf = requestAnimationFrame(render);
+    }
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('az-theme-changed', onTheme);
+      cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [visible]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        width: '100vw',
-        height: '100vh',
-        pointerEvents: 'none',
-        zIndex: 0
-      }}
-      aria-hidden="true"
-    />
+    <div className="atmosphere" aria-hidden="true">
+      <canvas ref={canvasRef} className="atmosphere__rain" />
+      <div className="atmosphere__aura" />
+      <div className="atmosphere__grid" />
+      <div className="atmosphere__beam" />
+      <div className="atmosphere__vignette" />
+      <div className="atmosphere__scanlines" />
+      <div className="atmosphere__grain" />
+    </div>
   );
 };

@@ -1,188 +1,153 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Search, X } from 'lucide-react';
 import { SKILL_CATEGORIES } from '../../data/portfolioData';
-import { Search, Cpu, Check } from 'lucide-react';
+import { Reveal, SectionHead, Tag } from '../ui';
 
 export const SkillsApp: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('ALL');
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('ALL');
 
-  const filteredCategories = SKILL_CATEGORIES.map(cat => {
-    const matchesCategory = activeCategory === 'ALL' || cat.name === activeCategory;
-    if (!matchesCategory) return null;
+  const totalSkills = useMemo(
+    () => SKILL_CATEGORIES.reduce((sum, item) => sum + item.skills.length, 0),
+    []
+  );
 
-    const matchedSkills = cat.skills.filter(s => 
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cat.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const filtered = useMemo(() => {
+    const search = query.toLowerCase().trim();
+    return SKILL_CATEGORIES.map((item) => {
+      if (category !== 'ALL' && item.name !== category) return null;
+      const skills = item.skills.filter(
+        (skill) =>
+          !search ||
+          skill.name.toLowerCase().includes(search) ||
+          item.name.toLowerCase().includes(search)
+      );
+      if (!skills.length) return null;
+      return { ...item, skills };
+    }).filter(Boolean) as typeof SKILL_CATEGORIES;
+  }, [query, category]);
 
-    if (matchedSkills.length === 0) return null;
-
-    return {
-      ...cat,
-      skills: matchedSkills
-    };
-  }).filter(Boolean) as typeof SKILL_CATEGORIES;
+  const matchCount = filtered.reduce((sum, item) => sum + item.skills.length, 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', padding: '6px' }}>
-      {/* Header & Search */}
-      <div 
-        style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          flexWrap: 'wrap', 
-          gap: '12px',
-          background: 'var(--bg-surface-elevated)',
-          padding: '16px',
-          borderRadius: '8px',
-          border: '1px solid var(--border-subtle)'
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Cpu size={16} style={{ color: 'var(--accent-green)' }} />
-            <h2 style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
-              TECHNICAL SKILLS & TOOLMATRIX
-            </h2>
+    <div className="app">
+      <SectionHead
+        index="03"
+        eyebrow="Capabilities"
+        title="Tools are just"
+        accent="instruments."
+        description="Competencies built in production client assessments and certified, multi-day practical examinations — not tutorial completions."
+        meta={
+          <div className="tag-row">
+            <Tag tone="acid">{SKILL_CATEGORIES.length} categories</Tag>
+            <Tag>{totalSkills} tracked skills</Tag>
+            <Tag>Web · API · Mobile · AD · Cloud · AI</Tag>
           </div>
-          <p className="font-sans" style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Verified competencies directly referenced in production client assessments and certified exam evaluations.
-          </p>
-        </div>
+        }
+      />
 
-        {/* Search input */}
-        <div 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            background: 'var(--bg-input)', 
-            border: '1px solid var(--border-green-dim)', 
-            borderRadius: '4px', 
-            padding: '6px 12px',
-            minWidth: 'min(100%, 200px)',
-            flex: '1 1 200px'
-          }}
-        >
-          <Search size={14} style={{ color: 'var(--accent-green)' }} />
+      <div className="skills-toolbar">
+        <div className="field skills-search">
+          <Search size={13} />
           <input
             type="text"
-            placeholder="Search tool or domain..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              color: 'var(--text-primary)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '12px',
-              width: '100%'
-            }}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search tool, domain or framework…"
+            aria-label="Search skills"
           />
-          {searchTerm && (
-            <button 
-              onClick={() => setSearchTerm('')} 
-              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '11px' }}
-            >
-              CLEAR
+          {query ? (
+            <button type="button" className="skills-clear" onClick={() => setQuery('')}>
+              Clear <X size={9} />
             </button>
-          )}
+          ) : null}
         </div>
+        <span className="skills-meta">
+          <b>{matchCount}</b> matches / {totalSkills} skills
+        </span>
       </div>
 
-      {/* Category Filter Chips */}
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+      <div className="skills-cats">
         <button
-          onClick={() => setActiveCategory('ALL')}
-          style={{
-            padding: '4px 10px',
-            fontSize: '11px',
-            fontFamily: 'var(--font-mono)',
-            borderRadius: '4px',
-            border: activeCategory === 'ALL' ? '1px solid var(--accent-green)' : '1px solid var(--border-subtle)',
-            background: activeCategory === 'ALL' ? 'var(--accent-green-dim)' : 'var(--bg-surface)',
-            color: activeCategory === 'ALL' ? 'var(--accent-green)' : 'var(--text-secondary)',
-            cursor: 'pointer'
-          }}
+          type="button"
+          className="chip"
+          data-active={category === 'ALL'}
+          onClick={() => setCategory('ALL')}
         >
-          ALL CATEGORIES ({SKILL_CATEGORIES.length})
+          All categories <span className="count">{SKILL_CATEGORIES.length}</span>
         </button>
-        {SKILL_CATEGORIES.map(cat => (
+        {SKILL_CATEGORIES.map((item) => (
           <button
-            key={cat.name}
-            onClick={() => setActiveCategory(cat.name)}
-            style={{
-              padding: '4px 10px',
-              fontSize: '11px',
-              fontFamily: 'var(--font-mono)',
-              borderRadius: '4px',
-              border: activeCategory === cat.name ? '1px solid var(--accent-green)' : '1px solid var(--border-subtle)',
-              background: activeCategory === cat.name ? 'var(--accent-green-dim)' : 'var(--bg-surface)',
-              color: activeCategory === cat.name ? 'var(--accent-green)' : 'var(--text-secondary)',
-              cursor: 'pointer'
-            }}
+            key={item.name}
+            type="button"
+            className="chip"
+            data-active={category === item.name}
+            onClick={() => setCategory(item.name)}
           >
-            {cat.name}
+            {item.name} <span className="count">{item.skills.length}</span>
           </button>
         ))}
       </div>
 
-      {/* Categories Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '14px' }}>
-        {filteredCategories.map((cat, idx) => (
-          <div
-            key={idx}
-            style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '6px',
-              padding: '16px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px'
+      {filtered.length === 0 ? (
+        <div className="skills-empty">
+          <Search size={20} />
+          <div>No skills match “{query}”.</div>
+          <button
+            type="button"
+            className="btn btn--sm"
+            onClick={() => {
+              setQuery('');
+              setCategory('ALL');
             }}
           >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-                  {cat.name}
-                </h3>
-                <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                  {cat.skills.length} ITEMS
-                </span>
-              </div>
-              <p className="font-sans" style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.4 }}>
-                {cat.description}
-              </p>
-            </div>
+            Reset filters
+          </button>
+        </div>
+      ) : (
+        <div className="skills-grid">
+          <AnimatePresence mode="popLayout" initial={false}>
+            {filtered.map((item, index) => (
+              <motion.div
+                key={item.name}
+                layout
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.32, delay: Math.min(index * 0.03, 0.16), ease: [0.16, 1, 0.3, 1] }}
+                className="panel panel--interactive is-acid skill-cat"
+              >
+                <div className="skill-cat__head">
+                  <h4 className="skill-cat__name">{item.name}</h4>
+                  <span className="skill-cat__count">{item.skills.length} items</span>
+                </div>
+                <p className="skill-cat__desc">{item.description}</p>
+                <div className="skill-cat__tags">
+                  {item.skills.map((skill) => (
+                    <span
+                      key={skill.name}
+                      className={`skill-chip ${skill.highlight ? 'skill-chip--hl' : ''}`}
+                    >
+                      {skill.name}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: 'auto', paddingTop: '8px' }}>
-              {cat.skills.map((skill, sIdx) => (
-                <span
-                  key={sIdx}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '3px 8px',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    fontFamily: 'var(--font-mono)',
-                    background: skill.highlight ? 'rgba(163, 255, 111, 0.08)' : 'rgba(0, 0, 0, 0.4)',
-                    border: skill.highlight ? '1px solid var(--border-green-dim)' : '1px solid var(--border-subtle)',
-                    color: skill.highlight ? 'var(--accent-green)' : 'var(--text-primary)'
-                  }}
-                >
-                  {skill.highlight && <Check size={10} style={{ color: 'var(--accent-green)' }} />}
-                  {skill.name}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      <Reveal>
+        <div className="app-note">
+          <Search size={12} />
+          <span>
+            Every category maps to hands-on assessment work — from OWASP WSTG and ASVS through
+            MASTG, MITRE ATT&amp;CK and the OWASP Top 10 for LLM applications.
+          </span>
+        </div>
+      </Reveal>
     </div>
   );
 };

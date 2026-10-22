@@ -1,522 +1,304 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Terminal, CornerDownLeft, Sparkles, Trash2, HelpCircle, ChevronDown, Minus } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Command, CornerDownLeft, Sparkles, Trash } from 'lucide-react';
 import type { TerminalLogEntry } from '../types/portfolio';
 import { COMMANDS } from '../commands/commandRegistry';
 import { PERSONAL_INFO } from '../data/portfolioData';
 import { sound } from '../utils/audio';
 
 interface TerminalPanelProps {
-  onExecuteCommand: (rawInput: string) => void;
   logs: TerminalLogEntry[];
+  onExecuteCommand: (rawInput: string) => void;
   onClear: () => void;
   onOpenCommandPalette: () => void;
-  isMinimized: boolean;
-  onMinimize: () => void;
-  isExecuting?: boolean;
-  onFocus?: () => void;
+  isExecuting: boolean;
 }
 
+const QUICK_COMMANDS = ['whoami', 'neofetch', 'experience', 'certs', 'skills', 'theme', 'help'];
+
 export const TerminalPanel: React.FC<TerminalPanelProps> = ({
-  onExecuteCommand,
   logs,
+  onExecuteCommand,
   onClear,
   onOpenCommandPalette,
-  isMinimized,
-  onMinimize,
-  isExecuting: isExternalExecuting = false,
-  onFocus
+  isExecuting
 }) => {
   const [inputVal, setInputVal] = useState('');
-  const [historyIndex, setHistoryIndex] = useState<number>(-1);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const isBusy = isExternalExecuting;
-
   const inputRef = useRef<HTMLInputElement>(null);
-  const outputContainerRef = useRef<HTMLDivElement>(null);
+  const outputRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll output to bottom
-  useEffect(() => {
-    if (outputContainerRef.current) {
-      outputContainerRef.current.scrollTop = outputContainerRef.current.scrollHeight;
-    }
-  }, [logs]);
-
-  // Always keep input focused when terminal is clicked & notify focus
-  const handleContainerClick = () => {
-    onFocus?.();
-    inputRef.current?.focus();
-  };
-
-  // Autocomplete suggestions on typing
-  useEffect(() => {
+  const suggestions = useMemo(() => {
     const trimmed = inputVal.trim().toLowerCase();
-    if (trimmed.length > 0) {
-      const matches = COMMANDS.filter(cmd => 
-        cmd.name.toLowerCase().startsWith(trimmed) || 
-        cmd.aliases?.some(a => a.toLowerCase().startsWith(trimmed))
-      ).map(c => c.name);
-      setSuggestions(matches.slice(0, 4));
-    } else {
-      setSuggestions([]);
-    }
+    if (!trimmed) return [];
+    return COMMANDS.filter(
+      (command) =>
+        command.name.toLowerCase().startsWith(trimmed) ||
+        command.aliases?.some((alias) => alias.toLowerCase().startsWith(trimmed))
+    )
+      .map((command) => command.name)
+      .slice(0, 5);
   }, [inputVal]);
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const cmd = inputVal.trim();
-    if (!cmd || isBusy) return;
+  useEffect(() => {
+    const node = outputRef.current;
+    if (node) node.scrollTop = node.scrollHeight;
+  }, [logs]);
+
+  useEffect(() => {
+    if (window.matchMedia('(hover: hover) and (min-width: 761px)').matches) {
+      inputRef.current?.focus({ preventScroll: true });
+    }
+  }, []);
+
+  const submit = (event?: React.FormEvent) => {
+    if (event) event.preventDefault();
+    const command = inputVal.trim();
+    if (!command || isExecuting) return;
 
     sound.playEnterBeep();
-    setCommandHistory(prev => [...prev, cmd]);
+    setCommandHistory((previous) => [...previous, command]);
     setHistoryIndex(-1);
     setInputVal('');
-    setSuggestions([]);
-
-    onExecuteCommand(cmd);
+    onExecuteCommand(command);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     sound.playKeyClick();
 
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (commandHistory.length === 0) return;
-      const nextIndex = historyIndex === -1 ? commandHistory.length - 1 : Math.max(0, historyIndex - 1);
-      setHistoryIndex(nextIndex);
-      setInputVal(commandHistory[nextIndex]);
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!commandHistory.length) return;
+      const next = historyIndex === -1 ? commandHistory.length - 1 : Math.max(0, historyIndex - 1);
+      setHistoryIndex(next);
+      setInputVal(commandHistory[next]);
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
       if (historyIndex === -1) return;
-      const nextIndex = historyIndex + 1;
-      if (nextIndex >= commandHistory.length) {
+      const next = historyIndex + 1;
+      if (next >= commandHistory.length) {
         setHistoryIndex(-1);
         setInputVal('');
       } else {
-        setHistoryIndex(nextIndex);
-        setInputVal(commandHistory[nextIndex]);
+        setHistoryIndex(next);
+        setInputVal(commandHistory[next]);
       }
-    } else if (e.key === 'Tab') {
-      e.preventDefault();
-      if (suggestions.length > 0) {
+    } else if (event.key === 'Tab') {
+      event.preventDefault();
+      if (suggestions.length) {
         setInputVal(suggestions[0]);
-        setSuggestions([]);
       }
+    } else if (event.key === 'l' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      onClear();
     }
   };
 
-  if (isMinimized) {
-    return null;
-  }
+  const renderOutputLine = (line: string, index: number) => {
+    if (line.startsWith('[ OK ]')) {
+      return (
+        <div key={index} className="term__line term__line--ok">
+          <span className="term__tag">[ OK ]</span>
+          <span>{line.replace('[ OK ] ', '')}</span>
+        </div>
+      );
+    }
+
+    if (line.startsWith('[ .. ]') || line.startsWith('Notice:') || line.includes('WARNING')) {
+      return (
+        <div key={index} className="term__line term__line--warn">
+          {line}
+        </div>
+      );
+    }
+
+    if (line.startsWith('az-secure: command not found')) {
+      return (
+        <div key={index} className="term__line term__line--error">
+          {line}
+        </div>
+      );
+    }
+
+    if (/^[═─=]{3,}/.test(line.trim())) {
+      return (
+        <div key={index} className="term__line term__line--rule">
+          {line}
+        </div>
+      );
+    }
+
+    if (line.startsWith('•')) {
+      return (
+        <div key={index} className="term__line term__line--bullet">
+          {line}
+        </div>
+      );
+    }
+
+    // Perfectly aligned neofetch ascii + spec rows
+    if (
+      line.length >= 24 &&
+      (line.includes('▄') || line.includes('▀') || line.includes('█') || line.startsWith('                        '))
+    ) {
+      const art = line.slice(0, 24);
+      const text = line.slice(24);
+      return (
+        <div key={index} className="term__line term__line--art-row">
+          <span className="term__art-col">{art}</span>
+          <span className="term__text-col">{text}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div key={index} className="term__line">
+        {line || '\u00A0'}
+      </div>
+    );
+  };
 
   return (
-    <div
-      onClick={handleContainerClick}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        minHeight: 0,
-        width: '100%',
-        background: 'var(--bg-surface)',
-        border: '1px solid var(--border-green-dim)',
-        borderRadius: '8px',
-        boxShadow: '0 12px 36px rgba(0,0,0,0.7)',
-        overflow: 'hidden'
-      }}
-    >
-      {/* Terminal Title Bar */}
-      <div
-        style={{
-          height: '36px',
-          padding: '0 12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'var(--bg-surface-elevated)',
-          borderBottom: '1px solid var(--border-subtle)',
-          userSelect: 'none'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Terminal size={14} style={{ color: 'var(--accent-green)' }} />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
-            <span className="hide-mobile">asif@az-secure:~ (bash)</span>
-            <span className="show-mobile">bash:~$</span>
-          </span>
-          {isBusy && (
-            <span style={{ fontSize: '10px', color: 'var(--accent-amber)', fontFamily: 'var(--font-mono)' }}>
-              [RUNNING]
-            </span>
-          )}
-        </div>
-
-        {/* Quick Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {/* Command Selector Dropdown Button */}
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsDropdownOpen(!isDropdownOpen);
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '3px 8px',
-                borderRadius: '4px',
-                background: 'rgba(163, 255, 111, 0.08)',
-                border: '1px solid var(--border-green-dim)',
-                color: 'var(--accent-green)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '11px',
-                cursor: 'pointer'
-              }}
-              title="Quick Command Selector"
-            >
-              <span>Commands</span>
-              <ChevronDown size={12} />
-            </button>
-
-            {/* Quick dropdown menu */}
-            {isDropdownOpen && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: '4px',
-                  width: 'min(240px, calc(100vw - 32px))',
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--accent-green)',
-                  borderRadius: '6px',
-                  boxShadow: 'var(--shadow-dropdown)',
-                  zIndex: 1000,
-                  padding: '6px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '2px'
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {COMMANDS.slice(0, 10).map((c) => (
-                  <button
-                    key={c.name}
-                    onClick={() => {
-                      setInputVal(c.name);
-                      setIsDropdownOpen(false);
-                      inputRef.current?.focus();
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '6px 8px',
-                      background: 'transparent',
-                      border: 'none',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary)',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                      textAlign: 'left'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'var(--accent-green-dim)';
-                      e.currentTarget.style.color = 'var(--accent-green)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'var(--text-primary)';
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>{c.name}</span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>{c.category}</span>
-                  </button>
-                ))}
-                <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }} />
-                <button
-                  onClick={() => {
-                    setIsDropdownOpen(false);
-                    onOpenCommandPalette();
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '6px 8px',
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'var(--accent-green)',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '11px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Sparkles size={12} />
-                  <span>Open Full Palette (Ctrl+K)</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Help Button */}
+    <div className="term">
+      <div className="term__toolbar">
+        <span className="term__toolbar-title">
+          <span className="live-dot" /> asif@az-secure
+          <span className="term__toolbar-dim">/bin/bash 5.2.26</span>
+        </span>
+        {isExecuting && <span className="term__running">RUNNING</span>}
+        <span className="term__toolbar-hint">
+          <span className="kbd">Tab</span> complete
+        </span>
+        <div className="term__tools">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onExecuteCommand('help');
-            }}
-            className="win-ctrl-btn"
-            title="Show Help Table"
+            type="button"
+            className="term__tool"
+            onClick={onOpenCommandPalette}
+            title="Open command palette (Ctrl+K)"
           >
-            <HelpCircle size={14} />
+            <Command size={12} />
+            <span className="desktop-only">Palette</span>
           </button>
-
-          {/* Clear screen */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              sound.playWindowAction();
-              onClear();
-            }}
-            className="win-ctrl-btn"
-            title="Clear Terminal Output"
-          >
-            <Trash2 size={13} />
-          </button>
-
-          {/* Minimize terminal */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              sound.playWindowAction();
-              onMinimize();
-            }}
-            className="win-ctrl-btn"
-            title="Minimize Terminal"
-          >
-            <Minus size={13} />
+          <button type="button" className="term__tool" onClick={onClear} title="Clear terminal (Ctrl+L)">
+            <Trash size={12} />
+            <span className="desktop-only">Clear</span>
           </button>
         </div>
       </div>
 
-      {/* Terminal Output Area */}
+      <div className="term__quick">
+        {QUICK_COMMANDS.map((command) => (
+          <button
+            key={command}
+            type="button"
+            className="term__chip"
+            disabled={isExecuting}
+            onClick={() => {
+              sound.playEnterBeep();
+              onExecuteCommand(command);
+            }}
+          >
+            ${command}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="term__chip term__chip--accent"
+          onClick={onOpenCommandPalette}
+        >
+          <Sparkles size={9} /> all commands
+        </button>
+      </div>
+
       <div
-        ref={outputContainerRef}
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: 'auto',
-          padding: '16px',
-          fontFamily: 'var(--font-mono)',
-          fontSize: '12.5px',
-          lineHeight: 1.6,
-          color: 'var(--text-primary)'
-        }}
+        className="term__output"
+        ref={outputRef}
+        onClick={() => inputRef.current?.focus({ preventScroll: true })}
       >
-        {/* Startup Welcome Header */}
-        <div style={{ marginBottom: '16px', borderBottom: '1px dashed var(--border-subtle)', paddingBottom: '12px' }}>
-          <div style={{ color: 'var(--accent-green)', fontWeight: 700 }}>
-            AZ-SECURE LINUX WORKSTATION // KERNEL 6.11.4-HARDENED (x86_64)
+        <div className="term__welcome">
+          <div className="term__welcome-top">
+            <span className="term__badge">AZ-SECURE</span>
+            <span className="term__welcome-dim">Linux 6.11.4-az-hardened · x86_64</span>
           </div>
-          <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '2px' }}>
-            User: {PERSONAL_INFO.name} — {PERSONAL_INFO.role} ({PERSONAL_INFO.location})
-          </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px' }}>
-            Type <span style={{ color: 'var(--accent-green)' }}>&apos;help&apos;</span> to see all commands, or click any command below:
-          </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
-            {['whoami', 'experience', 'certs', 'skills', 'labs', 'contact', 'neofetch'].map(cmd => (
-              <button
-                key={cmd}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onExecuteCommand(cmd);
-                }}
-                style={{
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  border: '1px solid var(--border-green-dim)',
-                  borderRadius: '3px',
-                  color: 'var(--accent-green)',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '11px',
-                  padding: '2px 8px',
-                  cursor: 'pointer'
-                }}
-              >
-                ${cmd}
-              </button>
-            ))}
-          </div>
+          <p className="term__welcome-name">
+            {PERSONAL_INFO.name} <span>— {PERSONAL_INFO.role}</span>
+          </p>
+          <p className="term__welcome-dim">
+            {PERSONAL_INFO.location} · Tata Consultancy Services · CPTS · CPENT · AWS SAA
+          </p>
+          <p className="term__welcome-hint">
+            Type <b>help</b> for the command reference. <span className="kbd">Ctrl K</span> opens the
+            palette, <span className="kbd">Ctrl `</span> toggles this console.
+          </p>
         </div>
 
-        {/* Dynamic Log Entries */}
-        {logs.map((log, lIdx) => (
-          <div key={log.id} style={{ marginBottom: '12px' }}>
-            {/* Input line */}
+        {logs.map((log, logIndex) => (
+          <div className="term__entry" key={log.id}>
             {log.command && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
-                <span style={{ color: 'var(--accent-green)', fontWeight: 600, flexShrink: 0, whiteSpace: 'nowrap' }}>
-                  <span className="hide-mobile">asif@az-secure:~$</span>
-                  <span className="show-mobile">asif:~$</span>
-                </span>
-                <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{log.command}</span>
+              <div className="term__cmdline">
+                <span className="term__prompt">asif@az-secure:~$</span>
+                <span className="term__cmd">{log.command}</span>
               </div>
             )}
-
-            {/* Output lines */}
-            {log.output && (
-              <div style={{ marginTop: '4px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {Array.isArray(log.output) ? (
-                  log.output.map((line, idx) => {
-                    const isSuccess = line.startsWith('[ OK ]');
-                    const isWarning = line.includes('Notice:') || line.includes('WARNING');
-                    const isHeader = line.includes('===') || line.includes('---');
-
-                    if (isSuccess) {
-                      return (
-                        <div 
-                          key={idx} 
-                          style={{ 
-                            display: 'flex', 
-                            alignItems: 'flex-start', 
-                            gap: '8px', 
-                            color: 'var(--text-primary)', 
-                            marginTop: '2px', 
-                            lineHeight: 1.45 
-                          }}
-                        >
-                          <span 
-                            style={{ 
-                              color: 'var(--accent-green)', 
-                              fontWeight: 700, 
-                              whiteSpace: 'nowrap', 
-                              flexShrink: 0, 
-                              fontFamily: 'var(--font-mono)' 
-                            }}
-                          >
-                            [ OK ]
-                          </span>
-                          <span style={{ flex: 1, minWidth: 0, color: 'var(--accent-green)' }}>
-                            {line.replace('[ OK ] ', '')}
-                          </span>
-                        </div>
-                      );
-                    }
-                    
-                    let color = 'var(--text-primary)';
-                    if (isWarning) color = 'var(--accent-amber)';
-                    else if (isHeader) color = 'var(--text-muted)';
-
-                    return (
-                      <div key={idx} style={{ color, lineHeight: 1.45 }}>
-                        {line}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div>{log.output}</div>
-                )}
-              </div>
-            )}
-
-            {/* Active typing cursor */}
-            {isBusy && lIdx === logs.length - 1 && (
-              <div style={{ marginTop: '4px' }}>
-                <span className="terminal-cursor" />
+            {log.output &&
+              (Array.isArray(log.output)
+                ? log.output.map((line, index) => renderOutputLine(line, index))
+                : renderOutputLine(log.output, 0))}
+            {isExecuting && logIndex === logs.length - 1 && (
+              <div className="term__line">
+                <span className="console__cursor" />
               </div>
             )}
           </div>
         ))}
       </div>
 
-      {/* Suggestion hints bar if tab completion available */}
       {suggestions.length > 0 && (
-        <div
-          style={{
-            padding: '4px 14px',
-            background: 'var(--bg-surface-elevated)',
-            borderTop: '1px solid var(--border-subtle)',
-            fontSize: '11px',
-            fontFamily: 'var(--font-mono)',
-            color: 'var(--text-muted)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <span>Suggestions (Tab to fill):</span>
-          {suggestions.map((s) => (
-            <span
-              key={s}
-              onClick={(e) => {
-                e.stopPropagation();
-                setInputVal(s);
-                inputRef.current?.focus();
-              }}
-              style={{
-                color: 'var(--accent-green)',
-                cursor: 'pointer',
-                textDecoration: 'underline'
+        <div className="term__suggest">
+          <span className="term__suggest-label">Suggestions</span>
+          {suggestions.map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              className="term__suggest-item"
+              onClick={() => {
+                setInputVal(suggestion);
+                inputRef.current?.focus({ preventScroll: true });
               }}
             >
-              {s}
-            </span>
+              {suggestion}
+            </button>
           ))}
+          <span className="term__suggest-hint">Tab to complete</span>
         </div>
       )}
 
-      {/* Terminal Input Bar */}
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px 10px',
-          background: 'var(--bg-input)',
-          borderTop: '1px solid var(--border-green-dim)',
-          flexShrink: 0,
-          position: 'relative',
-          zIndex: 10
-        }}
-      >
-        <span style={{ color: 'var(--accent-green)', fontFamily: 'var(--font-mono)', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
-          <span className="hide-mobile">asif@az-secure:~$</span>
-          <span className="show-mobile">asif:~$</span>
-        </span>
+      <form className="term__form" onSubmit={submit}>
+        <span className="term__prompt">asif@az-secure:~$</span>
         <input
           ref={inputRef}
+          className="term__input"
           type="text"
           value={inputVal}
-          onChange={(e) => setInputVal(e.target.value)}
+          onChange={(event) => setInputVal(event.target.value)}
           onKeyDown={handleKeyDown}
-          autoFocus
+          placeholder="type a command — help, whoami…"
           spellCheck={false}
           autoComplete="off"
           autoCapitalize="off"
-          style={{
-            flex: 1,
-            minWidth: 0,
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            color: 'var(--text-primary)',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '13px'
-          }}
-          placeholder="Type command ('help', 'experience')..."
+          aria-label="Terminal command input"
         />
-        <button
-          type="submit"
-          className="btn-terminal btn-terminal-primary"
-          style={{ padding: '4px 10px', fontSize: '11px', flexShrink: 0 }}
-        >
-          Run <CornerDownLeft size={11} />
+        <button type="submit" className="btn btn--primary term__run" disabled={isExecuting}>
+          Run <CornerDownLeft size={12} />
         </button>
       </form>
+
+      <div className="term__status">
+        <span>bash 5.2.26 · UTF-8 · secure channel</span>
+        <span>
+          {logs.length} {logs.length === 1 ? 'entry' : 'entries'}
+        </span>
+      </div>
     </div>
   );
 };

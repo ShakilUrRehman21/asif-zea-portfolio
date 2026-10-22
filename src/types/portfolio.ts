@@ -10,7 +10,8 @@ export type WindowId =
   | 'labs' 
   | 'projects' 
   | 'methodology' 
-  | 'contact';
+  | 'contact'
+  | 'terminal';
 
 export interface CommandDefinition {
   name: string;
@@ -29,6 +30,7 @@ export interface CommandResult {
   clearTerminal?: boolean;
   exitToLogin?: boolean;
   closeAllWindows?: boolean;
+  goHome?: boolean;
 }
 
 export interface TerminalLogEntry {
@@ -50,6 +52,7 @@ export interface WindowState {
   zIndex: number;
   position: { x: number; y: number };
   size?: { width: number; height: number };
+  width?: number;
 }
 
 export interface ExperienceItem {

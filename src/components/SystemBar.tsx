@@ -1,179 +1,157 @@
-import React, { useState, useEffect } from 'react';
-import { Wifi, Volume2, VolumeX, Power, Search } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Menu, Power, Search, Volume2, VolumeX } from 'lucide-react';
+import { APP_MAP } from '../data/apps';
+import type { WindowId } from '../types/portfolio';
 import { sound } from '../utils/audio';
+import { useTheme, THEMES, type ThemeId } from '../utils/theme';
 
 interface SystemBarProps {
-  onOpenCommandPalette: () => void;
-  onLockWorkstation: () => void;
+  activeWindowId: WindowId | null;
+  onOpenWindow?: (id: WindowId) => void;
+  onGoHome: () => void;
+  onOpenPalette: () => void;
+  onLock: () => void;
+  onOpenNav: () => void;
 }
 
+const THEME_ORDER: ThemeId[] = ['matrix', 'cyan', 'amber'];
+
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric'
+});
+
+const timeFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false
+});
+
 export const SystemBar: React.FC<SystemBarProps> = ({
-  onOpenCommandPalette,
-  onLockWorkstation
+  activeWindowId,
+  onGoHome,
+  onOpenPalette,
+  onLock,
+  onOpenNav
 }) => {
-  const [timeStr, setTimeStr] = useState<string>('');
-  const [dateStr, setDateStr] = useState<string>('');
-  const [isMuted, setIsMuted] = useState<boolean>(sound.getMuted());
+  const [now, setNow] = useState(() => new Date());
+  const [isMuted, setIsMuted] = useState(() => sound.getMuted());
+  const [theme, setTheme] = useTheme();
 
   useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTimeStr(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
-      setDateStr(now.toLocaleDateString([], { month: 'short', day: 'numeric', weekday: 'short' }));
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
   }, []);
 
-  const handleToggleAudio = () => {
-    const newState = sound.toggleMute();
-    setIsMuted(newState);
-  };
+  const activeApp = activeWindowId ? APP_MAP[activeWindowId] : null;
 
   return (
-    <header
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 'var(--topbar-height)',
-        padding: '0 14px',
-        background: 'rgba(12, 16, 13, 0.94)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--border-subtle)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        zIndex: 9900,
-        userSelect: 'none'
-      }}
-    >
-      {/* Left: Branding & Host Info */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span 
-            style={{ 
-              color: 'var(--accent-green)', 
-              fontWeight: 800, 
-              fontFamily: 'var(--font-mono)',
-              fontSize: '12px',
-              letterSpacing: '0.08em'
-            }}
-          >
-            AZ//SEC
+    <header className="topbar">
+      <div className="topbar__left">
+        <button type="button" className="brand" onClick={onGoHome} aria-label="Asif Zea — home">
+          <span className="brand__mark">AZ</span>
+          <span className="brand__text">
+            <span className="brand__name">ASIF ZEA</span>
+            <span className="brand__host">asif@az-secure</span>
           </span>
-          <span className="hide-mobile" style={{ color: 'var(--text-muted)', fontSize: '11px' }}>|</span>
-          <span className="hide-mobile" style={{ color: 'var(--text-primary)', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
-            asif@az-secure
-          </span>
-        </div>
-      </div>
-
-      {/* Center: Command Palette Trigger Button */}
-      <button
-        onClick={() => {
-          sound.playWindowAction();
-          onOpenCommandPalette();
-        }}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          padding: '4px 8px',
-          borderRadius: '4px',
-          background: 'rgba(255, 255, 255, 0.04)',
-          border: '1px solid var(--border-subtle)',
-          color: 'var(--text-secondary)',
-          fontFamily: 'var(--font-mono)',
-          fontSize: '11px',
-          cursor: 'pointer',
-          transition: 'all 0.15s ease'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'var(--accent-green)';
-          e.currentTarget.style.color = 'var(--accent-green)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'var(--border-subtle)';
-          e.currentTarget.style.color = 'var(--text-secondary)';
-        }}
-        title="Open Command Palette (Ctrl+K)"
-        aria-label="Open Command Palette"
-      >
-        <Search size={12} style={{ color: 'var(--accent-green)' }} />
-        <span className="hide-mobile">Command Palette</span>
-        <kbd 
-          className="hide-mobile"
-          style={{ 
-            fontSize: '9px', 
-            background: 'rgba(0, 0, 0, 0.4)', 
-            border: '1px solid var(--border-subtle)', 
-            borderRadius: '3px', 
-            padding: '1px 5px',
-            color: 'var(--text-muted)'
-          }}
-        >
-          Ctrl+K
-        </kbd>
-      </button>
-
-      {/* Right: VPN Status, Audio, Clock & Lock */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* Network & VPN simulated status */}
-        <div 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '4px', 
-            color: 'var(--text-secondary)', 
-            fontSize: '11px',
-            fontFamily: 'var(--font-mono)'
-          }}
-          title="Virtual Private Network: Active Secure Tunnel (tun0 10.10.14.88)"
-        >
-          <Wifi size={12} style={{ color: 'var(--accent-green)' }} />
-          <span className="hide-mobile" style={{ display: 'inline' }}>tun0 10.10.14.88</span>
-        </div>
-
-        {/* Audio Toggle */}
-        <button
-          onClick={handleToggleAudio}
-          className="win-ctrl-btn"
-          title={isMuted ? 'Unmute Sound Effects' : 'Mute Sound Effects'}
-          aria-label={isMuted ? 'Unmute Sound Effects' : 'Mute Sound Effects'}
-        >
-          {isMuted ? <VolumeX size={14} style={{ color: 'var(--text-muted)' }} /> : <Volume2 size={14} style={{ color: 'var(--accent-green)' }} />}
         </button>
 
-        {/* Clock & Date */}
-        <div 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px', 
-            color: 'var(--text-primary)', 
-            fontSize: '11px',
-            fontFamily: 'var(--font-mono)'
-          }}
-        >
-          <span className="hide-mobile">{dateStr}</span>
-          <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>{timeStr}</span>
+        {activeApp && (
+          <div className="topbar__active-badge" aria-label={`Active module: ${activeApp.label}`}>
+            <span className="topbar__active-sep">/</span>
+            <span className="topbar__active-pill">
+              <span className="topbar__active-dot" />
+              <span>{activeApp.label}</span>
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="topbar__right">
+        <div className="topbar__clock">
+          <span className="date">{dateFormatter.format(now)}</span>
+          <span className="time">{timeFormatter.format(now)}</span>
         </div>
 
-        {/* Workstation Lock */}
+        <div className="topbar__divider" />
+
+        {/* 3 Colors Theme Switcher — no text names */}
+        <div className="theme-dots" role="group" aria-label="Color theme selector">
+          {THEME_ORDER.map((id) => {
+            const meta = THEMES[id];
+            const isActive = theme === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                className={`theme-dot ${isActive ? 'theme-dot--active' : ''}`}
+                onClick={() => {
+                  sound.playKeyClick();
+                  setTheme(id);
+                }}
+                title={meta.label}
+                aria-label={`Switch to ${meta.label} theme`}
+                aria-pressed={isActive}
+              >
+                <span
+                  className="theme-dot__color"
+                  style={{ backgroundColor: meta.accent }}
+                  aria-hidden="true"
+                />
+              </button>
+            );
+          })}
+        </div>
+
         <button
+          type="button"
+          className="palette-trigger"
           onClick={() => {
             sound.playWindowAction();
-            onLockWorkstation();
+            onOpenPalette();
           }}
-          className="win-ctrl-btn close"
-          title="Lock Workstation (exit)"
-          aria-label="Lock Workstation"
+          title="Open command palette (Ctrl+K)"
+          aria-label="Open command palette"
         >
-          <Power size={13} />
+          <Search size={12} />
+          <span className="palette-trigger__label">Search</span>
+          <span className="kbd">Ctrl K</span>
+        </button>
+
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={() => setIsMuted(sound.toggleMute())}
+          title={isMuted ? 'Unmute interface sounds' : 'Mute interface sounds'}
+          aria-label={isMuted ? 'Unmute interface sounds' : 'Mute interface sounds'}
+        >
+          {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+        </button>
+
+        <button
+          type="button"
+          className="icon-btn"
+          data-tone="danger"
+          onClick={() => {
+            sound.playWindowAction();
+            onLock();
+          }}
+          title="Lock workstation"
+          aria-label="Lock workstation"
+        >
+          <Power size={14} />
+        </button>
+
+        <button
+          type="button"
+          className="icon-btn topbar__menu"
+          onClick={onOpenNav}
+          title="Open workstation map"
+          aria-label="Open menu"
+        >
+          <Menu size={15} />
         </button>
       </div>
     </header>

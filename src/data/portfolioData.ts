@@ -1,9 +1,9 @@
-import type { 
-  ExperienceItem, 
-  CertificationItem, 
-  AchievementItem, 
-  LabItem, 
-  SkillCategory 
+import type {
+  ExperienceItem,
+  CertificationItem,
+  AchievementItem,
+  LabItem,
+  SkillCategory
 } from '../types/portfolio';
 
 export const PERSONAL_INFO = {
@@ -363,4 +363,105 @@ export const METHODOLOGY_DETAILS = [
     focus: 'Tactics, techniques, and procedures (TTPs) mapping for adversary emulation in Active Directory, Azure, and LLM applications.',
     coverage: ['Initial Access & Persistence', 'Privilege Escalation', 'Credential Access & Kerberos', 'Lateral Movement', 'LLM Prompt Injection / ATLAS']
   }
+];
+
+/* --------------------------------------------------------------------------
+   Presentation-layer content: hero, stats, principles, engagement lifecycle
+   -------------------------------------------------------------------------- */
+
+export const HERO_DATA = {
+  status: 'Available for security engagements',
+  location: 'New Delhi, IN',
+  role: 'Application Security Engineer',
+  roleSecondary: 'Penetration Tester',
+  firstName: 'ASIF',
+  lastName: 'ZEA',
+  summary:
+    'I test web, API, mobile, cloud and AI systems the way an adversary would — then stay until the fix holds. Three years of end-to-end security work across global payments, banking, insurance and healthcare.',
+};
+
+export const QUICK_STATS = [
+  { value: '03', suffix: '+', label: 'Years in offensive security', note: 'TCS Application Security' },
+  { value: '10', suffix: '+', label: 'Enterprise clients', note: 'Payments · Banking · Health' },
+  { value: '05', suffix: '', label: 'Industry certifications', note: 'CPTS · CPENT · AWS SAA · CAP · CNSP' },
+  { value: '06', suffix: '', label: 'Security domains', note: 'Web · API · Mobile · AD · Cloud · AI' }
+];
+
+export const MARQUEE_ITEMS = [
+  'Web Application Security',
+  'API Security Testing',
+  'Mobile Penetration Testing',
+  'Active Directory Attack Paths',
+  'AWS Cloud Security',
+  'Red Teaming',
+  'AI / LLM Security',
+  'Secure Code Review',
+  'OWASP ASVS',
+  'MITRE ATT&CK',
+  'Burp Suite Pro',
+  'BloodHound',
+  'Kerberos',
+  'Prompt Injection'
+];
+
+export const PRINCIPLES = [
+  {
+    num: '01',
+    title: 'Evidence over instinct',
+    desc: 'Every finding ships with a reproducible proof of concept — not a scanner screenshot or a guess.'
+  },
+  {
+    num: '02',
+    title: 'Scope is a promise',
+    desc: 'Rules of engagement are respected to the letter. Production stays untouched, and testing never surprises the client.'
+  },
+  {
+    num: '03',
+    title: 'Fix until it holds',
+    desc: 'Reports are only half the work. Findings are retested with engineering teams until remediation is verified.'
+  }
+];
+
+export const SECTORS = ['Global Payments', 'Banking', 'Insurance', 'Healthcare', 'Retail'];
+
+export const ENGAGEMENT_PHASES = [
+  { num: '01', name: 'Scope', desc: 'Rules of engagement, assets, threat model and success criteria.' },
+  { num: '02', name: 'Recon', desc: 'Surface mapping, auth flows, identity and attack paths.' },
+  { num: '03', name: 'Test', desc: 'WSTG, ASVS, API Top 10, MASTG, AD and cloud paths.' },
+  { num: '04', name: 'Exploit', desc: 'Controlled validation with reproducible proof of concept.' },
+  { num: '05', name: 'Report', desc: 'CVSS v3.1 rating, business impact and remediation guidance.' },
+  { num: '06', name: 'Retest', desc: 'Fix verification alongside client engineering teams.' }
+];
+
+export const ENGAGEMENT_ARCHETYPES = [
+  {
+    title: 'Release gate testing',
+    desc: 'Pre-production change reviews across web, API, mobile and cloud.'
+  },
+  {
+    title: 'API authorization deep-dive',
+    desc: 'BOLA/IDOR, tenant isolation, JWT handling and business logic abuse.'
+  },
+  {
+    title: 'AD attack-path assessment',
+    desc: 'Kerberos, delegation and privilege escalation mapped with BloodHound.'
+  },
+  {
+    title: 'Cloud posture review',
+    desc: 'AWS IAM, S3, EC2/VPC exposure and privileged access paths.'
+  },
+  {
+    title: 'Identity red team',
+    desc: 'Objective-based Entra ID / Azure paths with MITRE ATT&CK mapping.'
+  },
+  {
+    title: 'AI-agent abuse testing',
+    desc: 'Prompt injection, excessive agency and cross-user data exposure.'
+  }
+];
+
+export const HOME_CONSOLE_SCRIPT = [
+  { cmd: 'whoami', out: ['asif_zea', 'appsec engineer / penetration tester'] },
+  { cmd: 'cat focus.txt', out: ['web · api · mobile · active directory · cloud · ai'] },
+  { cmd: 'status --availability', out: ['● open to select security engagements'] }
 ];
